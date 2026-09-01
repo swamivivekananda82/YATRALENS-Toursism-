@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | YATRALENS{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-4rem)] flex items-center justify-center py-16 bg-gradient-to-br from-brand-50 via-white to-slate-100">
+    <div class="max-w-5xl w-full mx-4 grid grid-cols-1 lg:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl border border-slate-200">
+        
+        <!-- Brand Side Panel -->
+        <div class="hidden lg:flex flex-col justify-between bg-gradient-to-br from-brand-800 via-brand-700 to-teal-600 text-white p-10">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
+                    <i class="fa-solid fa-compass-drafting text-xl"></i>
+                </div>
+                <span class="text-2xl font-black tracking-tight">YATRALENS</span>
+            </div>
+            <div class="space-y-6">
+                <h1 class="text-4xl font-black leading-tight">Discover India.<br>Plan safely.<br><span class="text-brand-200">Remember forever.</span></h1>
+                <p class="text-brand-100 text-sm leading-relaxed">Your intelligent travel & safety companion — curated packages, live safety intelligence, verified stays, and digital travel stories.</p>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0"><i class="fa-solid fa-shield-halved"></i></div>
+                        <span class="text-sm">Crime & safety intelligence per destination</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0"><i class="fa-solid fa-suitcase-rolling"></i></div>
+                        <span class="text-sm">Curated tourism packages & secure booking</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0"><i class="fa-solid fa-camera-retro"></i></div>
+                        <span class="text-sm">Turn every journey into a travel storybook</span>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-brand-200">© 2026 YATRALENS • Smart Tourism India</p>
+        </div>
+
+        <!-- Form Panel -->
+        <div class="bg-white p-8 sm:p-10">
+            <div class="mb-8">
+                <div class="lg:hidden w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
+                    <i class="fa-solid fa-user-lock text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-black text-slate-900">Welcome back</h1>
+                <p class="mt-1 text-sm text-slate-500">Sign in to continue your YATRALENS journey.</p>
+            </div>
+
+            {% if messages %}
+                <div class="mb-5 space-y-2">
+                    {% for message in messages %}
+                        <div class="rounded-xl px-3 py-2 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %} mr-1"></i>{{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <div>
+                    <label for="username" class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input id="username" name="username" type="text" required
+                            class="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            placeholder="Enter your username">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input id="password" name="password" type="password" required
+                            class="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            placeholder="Enter your password">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 text-slate-600 cursor-pointer">
+                        <input type="checkbox" name="remember" class="w-4 h-4 accent-brand-600 rounded">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" onclick="alert('Password reset is a demo feature — contact admin to reset your password.'); return false;" class="font-semibold text-brand-700 hover:underline">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-brand-700 to-brand-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:opacity-95 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-slate-100 text-center text-sm text-slate-600">
+                Don't have an account?
+                <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="font-bold text-brand-700 hover:underline">Create one now</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

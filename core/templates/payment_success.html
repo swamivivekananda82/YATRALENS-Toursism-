@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed | YATRALENS{% endblock %}
+
+{% block content %}
+<section class="py-16 bg-gradient-to-br from-emerald-50 via-white to-brand-50 min-h-screen">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+
+        <!-- Success Animation -->
+        <div class="relative inline-block">
+            <div class="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto animate-pulse">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-check text-4xl"></i>
+                </div>
+            </div>
+            <!-- Confetti dots -->
+            <span class="absolute -top-1 -left-2 text-emerald-400 animate-bounce">●</span>
+            <span class="absolute top-6 -right-3 text-amber-400 animate-bounce delay-150">●</span>
+            <span class="absolute -bottom-1 left-0 text-indigo-400 animate-bounce delay-300">●</span>
+        </div>
+
+        <h1 class="mt-6 text-3xl font-black text-slate-900">Payment Successful!</h1>
+        <p class="mt-2 text-sm text-slate-600">Your package has been booked. A confirmation has been recorded for your account.</p>
+
+        <!-- Confirmation Card -->
+        <div class="mt-8 bg-white rounded-3xl shadow-xl border border-slate-200 p-7 text-left space-y-5">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Booking Reference</p>
+                    <p class="font-mono font-black text-lg text-slate-900">{{ booking.booking_ref|upper }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Package</p>
+                    <p class="font-bold text-slate-900 mt-0.5">{{ booking.package.title }}</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Destination</p>
+                    <p class="font-bold text-slate-900 mt-0.5">{{ booking.package.destination.name }}, {{ booking.package.destination.state }}</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Travelers</p>
+                    <p class="font-bold text-slate-900 mt-0.5">{{ booking.num_travelers }}</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Amount Paid</p>
+                    <p class="font-bold text-brand-700 text-lg mt-0.5">₹{{ booking.total_amount|floatformat:"0" }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-700">
+                <i class="fa-solid fa-circle-info"></i>
+                This is a simulated payment for the demo. No real money was charged.
+            </div>
+        </div>
+
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="{% url 'booking_history' %}" class="px-6 py-3 bg-brand-700 text-white rounded-xl font-bold shadow-md hover:bg-brand-800 transition w-full sm:w-auto">
+                <i class="fa-solid fa-receipt mr-2"></i> View My Bookings
+            </a>
+            <a href="{% url 'index' %}" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition w-full sm:w-auto">
+                Back to Home
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

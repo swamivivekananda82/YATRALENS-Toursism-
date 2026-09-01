@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}YATRALENS – Curated Tourism Packages Across India{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<section class="relative bg-gradient-to-br from-indigo-900 via-brand-900 to-slate-900 text-white py-14 overflow-hidden">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500 rounded-full blur-3xl"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold text-indigo-200">
+            <i class="fa-solid fa-suitcase-rolling"></i>
+            <span>YATRALENS Curated Packages</span>
+        </span>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black">
+            Explore India, One Package at a Time
+        </h1>
+        <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
+            Hand-picked weekend getaways, adventure escapes, cultural immersions, and luxury retreats —
+            every package includes verified safe stays and curated itineraries.
+        </p>
+    </div>
+</section>
+
+<!-- Filter + Grid Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <!-- Sidebar Filters -->
+        <aside class="lg:col-span-1 space-y-6">
+            <form method="GET" action="{% url 'tourism_packages' %}" class="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 sticky top-24 space-y-5">
+                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-brand-600"></i> Refine Packages
+                </h3>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Search</label>
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Keyword..."
+                           class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Destination</label>
+                    <select name="destination" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                        <option value="">All Destinations</option>
+                        {% for dest in destinations %}
+                        <option value="{{ dest.id }}" {% if request.GET.destination|stringformat:"s" == dest.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dest.name }} ({{ dest.state }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Package Type</label>
+                    <select name="type" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                        <option value="">All Types</option>
+                        <option value="Weekend" {% if request.GET.type == 'Weekend' %}selected{% endif %}>Weekend Getaway</option>
+                        <option value="Adventure" {% if request.GET.type == 'Adventure' %}selected{% endif %}>Adventure</option>
+                        <option value="Cultural" {% if request.GET.type == 'Cultural' %}selected{% endif %}>Cultural & Heritage</option>
+                        <option value="Luxury" {% if request.GET.type == 'Luxury' %}selected{% endif %}>Luxury Escape</option>
+                        <option value="Budget" {% if request.GET.type == 'Budget' %}selected{% endif %}>Budget Backpacker</option>
+                        <option value="WomenSafe" {% if request.GET.type == 'WomenSafe' %}selected{% endif %}>Women-Safe Solo</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Max Price (₹)</label>
+                    <input type="number" name="max_price" value="{{ request.GET.max_price|default:'' }}" placeholder="e.g. 15000"
+                           class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Min Rating</label>
+                    <select name="min_rating" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                        <option value="">Any</option>
+                        <option value="4.5" {% if request.GET.min_rating == '4.5' %}selected{% endif %}>4.5+ ⭐</option>
+                        <option value="4.0" {% if request.GET.min_rating == '4.0' %}selected{% endif %}>4.0+ ⭐</option>
+                        <option value="3.5" {% if request.GET.min_rating == '3.5' %}selected{% endif %}>3.5+ ⭐</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-2 pt-2">
+                    <button type="submit" class="w-full px-4 py-2.5 bg-gradient-to-r from-brand-500 to-emerald-500 text-white text-xs font-bold rounded-lg shadow-md hover:from-brand-600 hover:to-emerald-600 transition">
+                        <i class="fa-solid fa-search mr-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'tourism_packages' %}" class="w-full px-4 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg text-center hover:bg-slate-200 transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Clear Filters
+                    </a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Package Cards -->
+        <div class="lg:col-span-3">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-black text-slate-900">
+                    <span class="text-brand-600">{{ packages|length }}</span> package{{ packages|length|pluralize }} available
+                </h2>
+                <span class="text-xs text-slate-500 hidden sm:inline">Sorted by: <b>Top Rated</b></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for pkg in packages %}
+                <a href="{% url 'package_detail' pkg.slug %}" class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 hover:shadow-2xl hover:border-brand-300 transition group flex flex-col">
+                    <div class="relative h-48 w-full overflow-hidden bg-slate-200">
+                        <img src="{{ pkg.image_url|default:'https://via.placeholder.com/600x400' }}" alt="{{ pkg.title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                        <div class="absolute top-3 left-3">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-white/90 text-slate-800">
+                                {{ pkg.get_package_type_display }}
+                            </span>
+                        </div>
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-amber-500/95 px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white">
+                            <i class="fa-solid fa-star text-[10px]"></i> {{ pkg.rating }}
+                        </div>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col space-y-3">
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900 leading-tight group-hover:text-brand-700 transition">{{ pkg.title }}</h3>
+                            <span class="text-xs text-slate-500">
+                                <i class="fa-solid fa-location-dot text-brand-500"></i>
+                                {{ pkg.destination.name }}, {{ pkg.destination.state }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">{{ pkg.subtitle|default:pkg.description }}</p>
+
+                        <div class="flex flex-wrap gap-1.5 text-[10px]">
+                            {% for highlight in pkg.highlights|slice:":3" %}
+                            <span class="px-2 py-1 rounded-md bg-slate-100 text-slate-600 font-medium">{{ highlight }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
+                            <div>
+                                <span class="text-2xl font-black text-brand-700">₹{{ pkg.price|floatformat:"0" }}</span>
+                                <span class="text-[10px] text-slate-400">/ person</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 block">Duration</span>
+                                <span class="text-sm font-bold text-slate-700">{{ pkg.duration_days }} Day{{ pkg.duration_days|pluralize }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="col-span-full text-center py-16 text-slate-400">
+                    <i class="fa-solid fa-suitcase-rolling text-5xl mb-4"></i>
+                    <p class="text-lg font-bold">No packages match your filters</p>
+                    <p class="text-xs">Try adjusting your search criteria.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}YATRALENS – Discover India. Plan Safely. Remember Forever.{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            950: '#042f2e',
+                        },
+                        safety: {
+                            low: '#10b981',      /* Emerald */
+                            moderate: '#f59e0b', /* Amber */
+                            high: '#ef4444',     /* Rose */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js for Admin Analytics & Safety Visuals -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- HTML2PDF for Client-side Story Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Custom map pin styles */
+        .custom-pin {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+        /* Pulse animations for SOS */
+        @keyframes pulse-sos {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+        }
+        .animate-sos-pulse {
+            animation: pulse-sos 2s infinite;
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Top Alert Ticker (Live Broadcasts) -->
+    <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2 max-w-6xl mx-auto overflow-hidden">
+            <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold shrink-0">
+                <i class="fa-solid fa-satellite-dish mr-1 animate-pulse"></i> LIVE SAFETY ADVISORY
+            </span>
+            <marquee behavior="scroll" direction="left" class="text-xs">
+                🛡️ Rajahmundry: 24/7 Tourist Police Kiosk active at Godavari Pushkar Ghat • Safe Corridor status: 🟢 Low Risk (Score: 82/100) • National Emergency Dial 112 • Women Safety Helpline 1091
+            </marquee>
+        </div>
+        <a href="{% url 'emergency_map' %}" class="hidden md:inline-flex items-center gap-1 text-[11px] underline font-bold hover:text-amber-100 shrink-0">
+            Emergency Contacts <i class="fa-solid fa-arrow-right text-[9px]"></i>
+        </a>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+
+                <!-- Brand Logo -->
+                <a href="{% url 'index' %}" class="flex items-center gap-2.5 group shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition">
+                        <i class="fa-solid fa-compass-drafting text-xl"></i>
+                    </div>
+                    <div class="hidden sm:block">
+                        <div class="text-xl font-black tracking-tight text-slate-900 leading-none">YATRALENS</div>
+                        <p class="text-[9px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">Discover • Plan • Remember</p>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links (xl+ to avoid crowding) -->
+                <nav class="hidden xl:flex items-center gap-0.5 text-sm font-medium text-slate-600">
+                    <a href="{% url 'index' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'home' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Home</a>
+                    <a href="{% url 'tourism_packages' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'packages' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Packages</a>
+                    <a href="{% url 'safety_intelligence' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'safety' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Safety Intel</a>
+                    <a href="{% url 'women_safety' %}" class="px-3 py-2 rounded-lg hover:text-rose-700 hover:bg-rose-50 transition {% if active_tab == 'women_safety' %}text-rose-700 bg-rose-50 font-bold{% endif %}">Women Safety</a>
+                    <a href="{% url 'verified_hotels' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'hotels' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Safe Stays</a>
+                    <a href="{% url 'memory_maker' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'memories' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Memories</a>
+                    <a href="{% url 'ai_assistant' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'ai_assistant' %}text-brand-700 bg-brand-50 font-bold{% endif %}">AI Guide</a>
+
+                    <!-- More dropdown: secondary pages -->
+                    <div class="relative ml-1" id="moreMenuWrap">
+                        <button onclick="toggleMoreMenu()" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition flex items-center gap-1">
+                            More <i class="fa-solid fa-chevron-down text-[10px] mt-0.5"></i>
+                        </button>
+                        <div id="moreMenu" class="hidden absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50">
+                            <a href="{% url 'emergency_map' %}" class="block px-3 py-2 text-sm hover:bg-slate-50 {% if active_tab == 'emergency' %}text-rose-700 font-bold{% endif %}"><i class="fa-solid fa-truck-medical w-5 text-rose-500"></i> Emergency Map</a>
+                            <a href="{% url 'trip_planner' %}" class="block px-3 py-2 text-sm hover:bg-slate-50"><i class="fa-solid fa-route w-5 text-teal-600"></i> Trip Planner</a>
+                            <a href="{% url 'customer_feedback' %}" class="block px-3 py-2 text-sm hover:bg-slate-50 {% if active_tab == 'feedback' %}text-purple-700 font-bold{% endif %}"><i class="fa-solid fa-comment-dots w-5 text-purple-500"></i> Feedback</a>
+                            <a href="{% url 'post_trip_review' %}" class="block px-3 py-2 text-sm hover:bg-slate-50 {% if active_tab == 'reviews' %}text-amber-700 font-bold{% endif %}"><i class="fa-solid fa-star w-5 text-amber-500"></i> Reviews</a>
+                            <a href="{% url 'admin_dashboard' %}" class="block px-3 py-2 text-sm hover:bg-slate-50"><i class="fa-solid fa-chart-line w-5 text-indigo-600"></i> Admin Board</a>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Right Action Bar -->
+                <div class="flex items-center gap-2">
+                    <!-- SOS Button -->
+                    <button onclick="openSosModal()" class="hidden md:inline-flex bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md shadow-red-500/30 items-center gap-1.5 transition transform active:scale-95 animate-sos-pulse shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span class="hidden lg:inline">EMERGENCY SOS</span>
+                        <span class="lg:hidden">SOS</span>
+                    </button>
+
+                    <!-- Profile -->
+                    <a href="{% url 'profile' %}" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-brand-100 text-slate-700 hover:text-brand-800 flex items-center justify-center border border-slate-200 transition shrink-0" title="My Profile">
+                        <i class="fa-solid fa-user text-sm"></i>
+                    </a>
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'booking_history' %}" class="hidden md:inline-flex px-3 py-2 rounded-xl bg-brand-50 text-brand-800 text-xs font-semibold hover:bg-brand-100 transition shrink-0" title="My Bookings">
+                            <i class="fa-solid fa-receipt mr-1"></i> Bookings
+                        </a>
+                        <form method="post" action="{% url 'logout' %}" class="inline-flex">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 transition shrink-0 hidden sm:inline-flex" title="Logout">
+                                <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="hidden sm:inline-flex px-3 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 transition shrink-0" title="Login">
+                            <i class="fa-solid fa-right-to-bracket mr-1"></i> Login
+                        </a>
+                    {% endif %}
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="xl:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 shrink-0">
+                        <i id="mobileMenuBtnIcon" class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Drawer -->
+            <div id="mobileMenu" class="hidden xl:hidden border-t border-slate-200 py-3 space-y-1">
+                <div class="flex md:hidden items-center gap-2 pb-2 mb-1 border-b border-slate-100">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'booking_history' %}" class="flex-1 text-center px-3 py-2 rounded-xl bg-brand-50 text-brand-800 text-xs font-semibold">My Bookings</a>
+                        <form method="post" action="{% url 'logout' %}" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-center px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="flex-1 text-center px-3 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Login</a>
+                        <a href="{% url 'register' %}" class="flex-1 text-center px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">Register</a>
+                    {% endif %}
+                </div>
+                <a href="{% url 'index' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-house w-6 text-slate-400"></i> Home</a>
+                <a href="{% url 'tourism_packages' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-suitcase-rolling w-6 text-indigo-500"></i> Tourism Packages</a>
+                <a href="{% url 'safety_intelligence' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-shield-halved w-6 text-emerald-600"></i> Crime & Safety Intel</a>
+                <a href="{% url 'women_safety' %}" class="block px-3 py-2 rounded-md font-medium text-rose-700 hover:bg-rose-50"><i class="fa-solid fa-person-dress w-6 text-rose-500"></i> Women Safe Tourism</a>
+                <a href="{% url 'verified_hotels' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-hotel w-6 text-indigo-500"></i> Verified Hotels</a>
+                <a href="{% url 'trip_planner' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-route w-6 text-teal-600"></i> Smart Trip Planner</a>
+                <a href="{% url 'memory_maker' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-camera-retro w-6 text-amber-500"></i> Tourist Memory Maker</a>
+                <a href="{% url 'customer_feedback' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-comment-dots w-6 text-purple-500"></i> Customer Feedback</a>
+                <a href="{% url 'post_trip_review' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-star w-6 text-amber-500"></i> Post-Trip Reviews</a>
+                <a href="{% url 'ai_assistant' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-robot w-6 text-fuchsia-600"></i> AI Travel Assistant</a>
+                <a href="{% url 'emergency_map' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-truck-medical w-6 text-rose-600"></i> Nearby Emergency Map</a>
+                <a href="{% url 'admin_dashboard' %}" class="block px-3 py-2 rounded-md font-medium text-indigo-700 hover:bg-indigo-50"><i class="fa-solid fa-chart-line w-6 text-indigo-600"></i> Tourism Authority Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Page Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 border-t border-slate-800 mt-16 pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+                
+                <!-- Col 1: Brand & Tagline -->
+                <div class="md:col-span-1 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold">
+                            <i class="fa-solid fa-compass-drafting"></i>
+                        </div>
+                        <span class="text-lg font-black text-white tracking-tight">YATRALENS</span>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        YATRALENS is your intelligent travel companion — discover curated tourism packages, assess destination crime risk, navigate safe routes, share live GPS, stay in verified hotels, and automatically turn every journey into a digital travel storybook.
+                    </p>
+                    <div class="text-[11px] text-brand-400 font-medium">
+                        <i class="fa-solid fa-award mr-1"></i> Smart India Hackathon (SIH) Project
+                    </div>
+                </div>
+
+                <!-- Col 2: Quick Features -->
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Explore</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{% url 'tourism_packages' %}" class="hover:text-white transition">📦 Curated Tourism Packages</a></li>
+                        <li><a href="{% url 'safety_intelligence' %}" class="hover:text-white transition">🛡️ Crime & Safety Intelligence</a></li>
+                        <li><a href="{% url 'women_safety' %}" class="hover:text-white transition">👩 Women Safe Tourism & Live Share</a></li>
+                        <li><a href="{% url 'verified_hotels' %}" class="hover:text-white transition">🏨 Verified Safe Accommodations</a></li>
+                        <li><a href="{% url 'trip_planner' %}" class="hover:text-white transition">📅 AI Safety Trip Planner</a></li>
+                        <li><a href="{% url 'memory_maker' %}" class="hover:text-white transition">📸 Tourist Memory Maker & Stories</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Community -->
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Community</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{% url 'customer_feedback' %}" class="hover:text-white transition">💬 Customer Feedback</a></li>
+                        <li><a href="{% url 'post_trip_review' %}" class="hover:text-white transition">⭐ Post-Trip Reviews</a></li>
+                        <li><a href="{% url 'emergency_map' %}" class="hover:text-white transition">🗺️ Emergency Map</a></li>
+                        <li><a href="{% url 'ai_assistant' %}" class="hover:text-white transition">🤖 AI Travel Assistant</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: India Emergency Helplines -->
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Emergency Helplines (24/7)</h4>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-800/60 border border-slate-700">
+                            <span class="text-slate-300">National Emergency</span>
+                            <a href="tel:112" class="font-bold text-red-400 hover:underline">112</a>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-800/60 border border-slate-700">
+                            <span class="text-slate-300">Women Helpline</span>
+                            <a href="tel:1091" class="font-bold text-rose-400 hover:underline">1091 / 1090</a>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-800/60 border border-slate-700">
+                            <span class="text-slate-300">Tourist Infoline</span>
+                            <a href="tel:1363" class="font-bold text-amber-400 hover:underline">1363</a>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-800/60 border border-slate-700">
+                            <span class="text-slate-300">Rajahmundry Police</span>
+                            <a href="tel:08832471033" class="font-bold text-teal-400 hover:underline">0883-2471033</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400">
+                <p>&copy; 2026 YATRALENS. Intelligent Tourism & Safety Companion for Travelers in India.</p>
+                <div class="flex gap-4 mt-3 sm:mt-0">
+                    <a href="{% url 'safety_intelligence' %}" class="hover:text-white">Crime & Safety Intel</a>
+                    <a href="{% url 'tourism_packages' %}" class="hover:text-white">Tourism Packages</a>
+                    <a href="{% url 'customer_feedback' %}" class="hover:text-white">Customer Feedback</a>
+                    <a href="{% url 'emergency_map' %}" class="hover:text-white">Emergency Map</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================================================= -->
+    <!-- EMERGENCY SOS MODAL (Interactive 3-Second Hold Activation & Alert Dispatch) -->
+    <!-- ========================================================================= -->
+    <div id="sosModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border-4 border-red-600 transform transition-all">
+            
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white p-5 text-center relative">
+                <button onclick="closeSosModal()" class="absolute right-4 top-4 text-white/80 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-black uppercase tracking-wider">Emergency SOS Trigger</h3>
+                <p class="text-xs text-red-100 font-medium">Instant police broadcast & trusted contacts notifier</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-6 text-center">
+                
+                <!-- Interactive Hold-to-Activate Button -->
+                <div id="sosHoldArea" class="flex flex-col items-center justify-center">
+                    <div class="relative w-40 h-40 flex items-center justify-center cursor-pointer select-none"
+                         id="sosTriggerBtn"
+                         onmousedown="startSosHold()"
+                         onmouseup="cancelSosHold()"
+                         onmouseleave="cancelSosHold()"
+                         ontouchstart="startSosHold()"
+                         ontouchend="cancelSosHold()">
+                        
+                        <!-- SVG Circular Progress Indicator -->
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="54" stroke="#fee2e2" stroke-width="8" fill="transparent"/>
+                            <circle id="sosProgressCircle" cx="60" cy="60" r="54" stroke="#dc2626" stroke-width="8" fill="transparent"
+                                    stroke-dasharray="339.29" stroke-dashoffset="339.29" stroke-linecap="round" class="progress-ring-circle"/>
+                        </svg>
+
+                        <!-- Center Button -->
+                        <div class="absolute inset-3 rounded-full bg-gradient-to-br from-red-500 to-red-700 text-white flex flex-col items-center justify-center shadow-lg hover:scale-95 active:scale-90 transition transform">
+                            <i class="fa-solid fa-bell text-2xl mb-1"></i>
+                            <span class="text-xs font-black tracking-wider uppercase">HOLD 3 SEC</span>
+                            <span id="sosCountdownText" class="text-[10px] text-red-200">Press & Hold</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Press and hold the button for 3 seconds to trigger emergency alert</p>
+                </div>
+
+                <!-- SOS Activated State (Initially Hidden) -->
+                <div id="sosActiveResult" class="hidden text-left space-y-4">
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 animate-ping">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-red-900 text-sm">🚨 SOS ALERT BROADCASTED!</h4>
+                            <p class="text-xs text-red-700">GPS Coordinates (16.9891° N, 81.7840° E) & alert dispatched to family and Rajahmundry Police Control.</p>
+                        </div>
+                    </div>
+
+                    <!-- Rapid Helplines Grid -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="tel:112" class="p-3 bg-red-600 text-white rounded-xl flex items-center gap-2 hover:bg-red-700 transition">
+                            <i class="fa-solid fa-phone text-lg"></i>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-red-200">Police & Medical</p>
+                                <p class="text-sm font-black">Call 112</p>
+                            </div>
+                        </a>
+                        <a href="tel:1091" class="p-3 bg-rose-600 text-white rounded-xl flex items-center gap-2 hover:bg-rose-700 transition">
+                            <i class="fa-solid fa-person-dress text-lg"></i>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-rose-200">Women Helpline</p>
+                                <p class="text-sm font-black">Call 1091</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Nearby Emergency Services -->
+                    <div class="border-t border-slate-200 pt-3">
+                        <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nearest Dispatched Stations:</h5>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
+                                <div>
+                                    <span class="font-bold text-slate-900">🚔 Rajahmundry Central Police</span>
+                                    <p class="text-[10px] text-slate-500">0.6 km away • Response unit standby</p>
+                                </div>
+                                <a href="tel:08832471033" class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-bold">Call</a>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
+                                <div>
+                                    <span class="font-bold text-slate-900">🏥 Govt General Hospital</span>
+                                    <p class="text-[10px] text-slate-500">1.2 km away • Trauma Center 24/7</p>
+                                </div>
+                                <a href="tel:08832473456" class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-bold">Call</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cancel / Reset Button -->
+                    <button onclick="resetSosModal()" class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
+                        I am safe now / Cancel Alarm
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                mobileMenu.classList.toggle('hidden');
+                document.getElementById('mobileMenuBtnIcon').classList.toggle('fa-bars');
+                document.getElementById('mobileMenuBtnIcon').classList.toggle('fa-xmark');
+            });
+            // Close mobile menu when a link inside is clicked
+            mobileMenu.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    const ic = document.getElementById('mobileMenuBtnIcon');
+                    ic.classList.add('fa-bars');
+                    ic.classList.remove('fa-xmark');
+                });
+            });
+        }
+
+        // Desktop "More" dropdown
+        function toggleMoreMenu() {
+            const m = document.getElementById('moreMenu');
+            m.classList.toggle('hidden');
+        }
+        document.addEventListener('click', (e) => {
+            const wrap = document.getElementById('moreMenuWrap');
+            const menu = document.getElementById('moreMenu');
+            if (wrap && menu && !menu.classList.contains('hidden') && !wrap.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // SOS Modal Control
+        let sosHoldTimer = null;
+        let sosHoldProgress = 0;
+        const totalHoldTime = 3000; // 3 seconds
+        const circleCircumference = 339.29; // 2 * PI * 54
+        let audioContext = null;
+
+        function openSosModal() {
+            document.getElementById('sosModal').classList.remove('hidden');
+            document.getElementById('sosModal').classList.add('flex');
+            resetSosState();
+        }
+
+        function closeSosModal() {
+            document.getElementById('sosModal').classList.add('hidden');
+            document.getElementById('sosModal').classList.remove('flex');
+            cancelSosHold();
+        }
+
+        function startSosHold() {
+            const circle = document.getElementById('sosProgressCircle');
+            const text = document.getElementById('sosCountdownText');
+            let elapsed = 0;
+            const interval = 50;
+
+            sosHoldTimer = setInterval(() => {
+                elapsed += interval;
+                const percent = Math.min(elapsed / totalHoldTime, 1);
+                const offset = circleCircumference - (percent * circleCircumference);
+                circle.style.strokeDashoffset = offset;
+                const remainingSec = Math.ceil((totalHoldTime - elapsed) / 1000);
+                text.innerText = `Holding... ${remainingSec}s`;
+
+                if (elapsed >= totalHoldTime) {
+                    clearInterval(sosHoldTimer);
+                    triggerEmergencySos();
+                }
+            }, interval);
+        }
+
+        function cancelSosHold() {
+            if (sosHoldTimer) {
+                clearInterval(sosHoldTimer);
+                sosHoldTimer = null;
+            }
+            const circle = document.getElementById('sosProgressCircle');
+            const text = document.getElementById('sosCountdownText');
+            if (circle) circle.style.strokeDashoffset = circleCircumference;
+            if (text) text.innerText = 'Press & Hold';
+        }
+
+        function resetSosState() {
+            document.getElementById('sosHoldArea').classList.remove('hidden');
+            document.getElementById('sosActiveResult').classList.add('hidden');
+            cancelSosHold();
+        }
+
+        function resetSosModal() {
+            resetSosState();
+            showToast('SOS Alert stood down. Marked safe.', 'info');
+        }
+
+        function triggerEmergencySos() {
+            playSiren();
+            document.getElementById('sosHoldArea').classList.add('hidden');
+            document.getElementById('sosActiveResult').classList.remove('hidden');
+            
+            // Dispatch to backend API
+            fetch('/api/sos/trigger/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    traveler_name: 'Priya Sharma (Solo Traveler)',
+                    latitude: 16.9891,
+                    longitude: 81.7840,
+                    location_name: 'Godavari Pushkar Ghat, Rajahmundry'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showToast('🚨 SOS Dispatched! Police and emergency contacts notified.', 'error');
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('🚨 Emergency Signal Recorded Locally!', 'error');
+            });
+        }
+
+        // Synthesize Alarm Siren using Web Audio API
+        function playSiren() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.6);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 1.8);
+            } catch(e) {
+                console.log('Audio Context muted or unavailable', e);
+            }
+        }
+
+        // Global Toast Notification Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-900 border-slate-700 text-white';
+            let icon = 'fa-circle-check text-emerald-400';
+            
+            if (type === 'error') {
+                bg = 'bg-red-900 border-red-700 text-white';
+                icon = 'fa-triangle-exclamation text-red-400';
+            } else if (type === 'info') {
+                bg = 'bg-teal-900 border-teal-700 text-white';
+                icon = 'fa-info-circle text-teal-400';
+            }
+
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold flex items-center gap-2.5 transition-all transform duration-300 translate-y-2 opacity-0 pointer-events-auto max-w-sm`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

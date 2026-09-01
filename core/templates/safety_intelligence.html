@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}Destination Safety Intelligence & Crime Heatmap – SafeTrip Memories{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-8 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Page Header & Destination Selector -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-xs font-bold text-teal-700 uppercase tracking-wider">
+                    <i class="fa-solid fa-shield-halved text-emerald-600"></i> Destination Safety Intelligence
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                    Safety & Crime Risk Analysis: <span class="text-teal-700">{{ destination.name }}</span>
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">{{ destination.state }}, India • {{ destination.tagline }}</p>
+            </div>
+
+            <!-- Destination Switcher Dropdown -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-600">Select City:</span>
+                <select id="destinationSelector" onchange="switchDestination(this.value)" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    {% for d in all_destinations %}
+                    <option value="{{ d.name }}" {% if d.name == destination.name %}selected{% endif %}>
+                        {{ d.name }} (Score: {{ d.safety_score }}/100)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    
+    <!-- Mandatory Safety Disclaimer Notice -->
+    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-2xl shadow-sm flex items-start gap-3">
+        <div class="text-amber-600 text-lg mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="text-xs text-amber-900 leading-relaxed">
+            <span class="font-bold">Important Safety Advisory:</span> Safety information and risk scores are based on available historical, law-enforcement, and public tourist incident data and may not represent momentary or real-time conditions. Always remain alert and use the emergency SOS features when traveling.
+        </div>
+    </div>
+
+    <!-- Safety Score Meter & Factor Breakdown Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Visual Safety Score Meter (0-100) -->
+        <div class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold uppercase text-slate-400 tracking-wider">Destination Safety Score</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold {% if destination.safety_score >= 75 %}bg-emerald-100 text-emerald-800{% elif destination.safety_score >= 50 %}bg-amber-100 text-amber-800{% else %}bg-rose-100 text-rose-800{% endif %}">
+                        {{ destination.risk_level }}
+                    </span>
+                </div>
+
+                <!-- Circular / Meter Visual -->
+                <div class="flex flex-col items-center justify-center my-6">
+                    <div class="relative w-48 h-48 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                            <!-- Background track -->
+                            <circle cx="60" cy="60" r="50" stroke="#f1f5f9" stroke-width="12" fill="transparent"/>
+                            <!-- Colored Meter Circle -->
+                            <circle cx="60" cy="60" r="50" 
+                                    stroke="{% if destination.safety_score >= 75 %}#10b981{% elif destination.safety_score >= 50 %}#f59e0b{% else %}#ef4444{% endif %}" 
+                                    stroke-width="12" 
+                                    stroke-dasharray="314.15" 
+                                    stroke-dashoffset="{{ 314.15|add:'-257.6' }}" 
+                                    stroke-linecap="round" fill="transparent"/>
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span class="text-4xl font-black text-slate-900">{{ destination.safety_score }}</span>
+                            <span class="text-xs font-bold text-slate-400">/ 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Risk Indicator Legend -->
+                    <div class="flex items-center justify-center gap-3 text-xs mt-2 font-bold">
+                        <span class="flex items-center gap-1 text-emerald-700">🟢 Low Risk (75-100)</span>
+                        <span class="flex items-center gap-1 text-amber-700">🟡 Moderate (50-74)</span>
+                        <span class="flex items-center gap-1 text-rose-700">🔴 High Risk (&lt;50)</span>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-600 text-center leading-relaxed mb-4">
+                    {{ destination.name }} holds an outstanding safety rating of <b>{{ destination.safety_score }}/100</b>, characterized by active tourist police coverage along the Godavari River promenade and high CCTV density.
+                </p>
+            </div>
+
+            <!-- Women Safety Rating Badge -->
+            <div class="p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-person-dress"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-rose-950">Solo Women Safety Rating</h4>
+                        <p class="text-[11px] text-rose-700">92% Positive Safety Index • Highly Recommended</p>
+                    </div>
+                </div>
+                <a href="{% url 'women_safety' %}" class="px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-lg hover:bg-rose-700 transition">
+                    Explore Hub
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Right: Granular Safety Factors & Radar Breakdown -->
+        <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 space-y-6">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Safety & Risk Factor Breakdown</h3>
+                <p class="text-xs text-slate-500">Comprehensive parameters calculated from historical police logs, emergency dispatch metrics, and tourist reviews.</p>
+            </div>
+
+            <!-- Factor Bars -->
+            <div class="space-y-4">
+                
+                <!-- Night-time safety -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-700"><i class="fa-solid fa-moon text-indigo-500 w-5"></i> Night-time Safety & Lighting</span>
+                        <span class="text-emerald-600">{{ destination.night_safety_score }}/100 (Well-Lit Corridors)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-emerald-500 h-2.5 rounded-full" style="width: {{ destination.night_safety_score }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Police station accessibility -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-700"><i class="fa-solid fa-building-shield text-teal-600 w-5"></i> Police Station Accessibility</span>
+                        <span class="text-teal-600">{{ destination.police_accessibility_score }}% (Avg Response: &lt; 6 mins)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-teal-500 h-2.5 rounded-full" style="width: {{ destination.police_accessibility_score }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Hospital & Trauma reach -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-700"><i class="fa-solid fa-hospital text-rose-600 w-5"></i> Hospital & Emergency Reach</span>
+                        <span class="text-rose-600">{{ destination.hospital_accessibility_score }}% (1.2 km radius)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-rose-500 h-2.5 rounded-full" style="width: {{ destination.hospital_accessibility_score }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Tourist Density -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-700"><i class="fa-solid fa-users text-amber-500 w-5"></i> Tourist Density & Crowd Safety</span>
+                        <span class="text-slate-900">{{ destination.tourist_density }}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-amber-500 h-2.5 rounded-full" style="width: 85%"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quarterly Incident Metrics Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Crime Index</span>
+                    <span class="text-base font-black text-emerald-600">{{ destination.crime_rate_index }}</span>
+                    <span class="text-[9px] text-slate-400 block">per 100k</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Theft Reports</span>
+                    <span class="text-base font-black text-amber-600">{{ destination.theft_reports }}</span>
+                    <span class="text-[9px] text-slate-400 block">Quarterly low</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Harassment</span>
+                    <span class="text-base font-black text-emerald-600">{{ destination.harassment_reports }}</span>
+                    <span class="text-[9px] text-slate-400 block">Strict zero-tol</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Emergency Reach</span>
+                    <span class="text-base font-black text-teal-600">{{ destination.emergency_accessibility_score }}%</span>
+                    <span class="text-[9px] text-slate-400 block">24/7 Coverage</span>
+                </div>
+            </div>
+
+            <!-- Accident-prone areas note -->
+            <div class="p-3 rounded-2xl bg-slate-100 text-xs text-slate-600 flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-exclamation text-slate-500 mt-0.5"></i>
+                <div>
+                    <span class="font-bold text-slate-800">Accident-Prone Area Advisory:</span>
+                    <span>{{ destination.accident_prone_areas }}</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Interactive Crime Heatmap & Safety Zone Explorer -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+                <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-teal-600"></i>
+                    <span>Interactive Crime & Safety Heatmap: {{ destination.name }}</span>
+                </h3>
+                <p class="text-xs text-slate-500">Zoom in to inspect risk levels, lighting, police patrols, and CCTV density for specific areas.</p>
+            </div>
+
+            <!-- Map Filter Toggles -->
+            <div class="flex items-center gap-2 text-xs font-semibold">
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800">🟢 Tourist Areas</span>
+                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800">🟡 Markets & Highways</span>
+                <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800">🔴 Isolated Zones</span>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-inner h-[480px] w-full" id="safetyHeatmap"></div>
+
+        <!-- Zone Details Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {% for zone in safety_zones %}
+            <div class="p-4 rounded-2xl border transition duration-200 hover:shadow-md {% if 'Low' in zone.risk_level %}bg-emerald-50/50 border-emerald-200{% elif 'Moderate' in zone.risk_level %}bg-amber-50/50 border-amber-200{% else %}bg-rose-50/50 border-rose-200{% endif %}">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-bold text-xs text-slate-900">{{ zone.name }}</h4>
+                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full {% if 'Low' in zone.risk_level %}bg-emerald-200 text-emerald-900{% elif 'Moderate' in zone.risk_level %}bg-amber-200 text-amber-900{% else %}bg-rose-200 text-rose-900{% endif %}">
+                        {{ zone.risk_level }}
+                    </span>
+                </div>
+                <div class="space-y-1 text-[11px] text-slate-600 mb-2">
+                    <div><b>Type:</b> {{ zone.zone_type }}</div>
+                    <div><b>Lighting:</b> {{ zone.lighting_status }}</div>
+                    <div><b>Patrol:</b> {{ zone.police_patrol }}</div>
+                    <div><b>CCTV:</b> {{ zone.cctv_coverage }}</div>
+                </div>
+                <p class="text-[10px] text-slate-500 italic bg-white/70 p-2 rounded-lg border border-slate-100">
+                    {{ zone.safety_notes }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function switchDestination(name) {
+        window.location.href = `/safety/${name}/`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const destLat = {{ destination.latitude }};
+        const destLng = {{ destination.longitude }};
+        const destName = "{{ destination.name }}";
+
+        // Initialize Leaflet Map
+        const map = L.map('safetyHeatmap').setView([destLat, destLng], 13);
+
+        // OpenStreetMap Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Safety Zones Data from Django
+        const zones = [
+            {% for zone in safety_zones %}
+            {
+                name: "{{ zone.name|escapejs }}",
+                type: "{{ zone.zone_type|escapejs }}",
+                risk: "{{ zone.risk_level|escapejs }}",
+                lat: {{ zone.latitude }},
+                lng: {{ zone.longitude }},
+                radius: {{ zone.radius_meters }},
+                lighting: "{{ zone.lighting_status|escapejs }}",
+                patrol: "{{ zone.police_patrol|escapejs }}",
+                cctv: "{{ zone.cctv_coverage|escapejs }}",
+                notes: "{{ zone.safety_notes|escapejs }}"
+            },
+            {% endfor %}
+        ];
+
+        // Draw Circles & Markers for each Safety Zone
+        zones.forEach(zone => {
+            let color = '#10b981'; // Green (Low)
+            let fillColor = '#34d399';
+            if (zone.risk.includes('Moderate')) {
+                color = '#f59e0b'; // Amber (Moderate)
+                fillColor = '#fbbf24';
+            } else if (zone.risk.includes('High')) {
+                color = '#ef4444'; // Red (High)
+                fillColor = '#f87171';
+            }
+
+            // Draw Risk Circle Heatmap Zone
+            const circle = L.circle([zone.lat, zone.lng], {
+                color: color,
+                fillColor: fillColor,
+                fillOpacity: 0.35,
+                radius: zone.radius
+            }).addTo(map);
+
+            // Marker Popup
+            const popupContent = `
+                <div class="p-2 space-y-1.5 text-xs">
+                    <div class="font-bold text-sm text-slate-900">${zone.name}</div>
+                    <div class="inline-block px-2 py-0.5 text-[10px] font-extrabold rounded text-white" style="background-color: ${color};">
+                        ${zone.risk}
+                    </div>
+                    <div class="text-[11px] text-slate-600 mt-1">
+                        <b>Zone Type:</b> ${zone.type}<br/>
+                        <b>Lighting:</b> ${zone.lighting}<br/>
+                        <b>Police:</b> ${zone.patrol}<br/>
+                        <b>CCTV:</b> ${zone.cctv}
+                    </div>
+                    <div class="text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded border border-slate-200 mt-1">
+                        ${zone.notes}
+                    </div>
+                </div>
+            `;
+            circle.bindPopup(popupContent);
+        });
+
+        // Add Destination Center Pin
+        const centerMarker = L.marker([destLat, destLng]).addTo(map);
+        centerMarker.bindPopup(`<b>${destName} Center</b><br/>Safety Score: {{ destination.safety_score }}/100`).openPopup();
+    });
+</script>
+{% endblock %}

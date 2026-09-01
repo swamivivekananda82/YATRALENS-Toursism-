@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Journey Tracker (Family View) – SafeTrip Memories{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-teal-900 via-slate-900 to-teal-950 text-white py-6 border-b border-teal-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-lg font-bold animate-pulse">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black">Live Family Journey Tracking</h1>
+                    <p class="text-xs text-teal-200">Tracking: <b>{{ session.traveler_name }}</b> • Shared with: <b>{{ session.trusted_contact_name }}</b></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full text-xs font-bold flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Broadcast Active
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    
+    <!-- Status Banner -->
+    <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Current Position (Live GPS)</span>
+            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-location-dot text-rose-600"></i>
+                <span>{{ session.current_location_name }}</span>
+            </h3>
+            <p class="text-xs text-slate-500">Coordinates: {{ session.current_latitude }}° N, {{ session.current_longitude }}° E</p>
+        </div>
+
+        <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Device Battery</span>
+                <span class="text-sm font-black text-slate-800"><i class="fa-solid fa-battery-three-quarters text-emerald-500 mr-1"></i> {{ session.battery_level }}%</span>
+            </div>
+            <div class="border-l border-slate-200 pl-4">
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Safety Status</span>
+                <span class="text-sm font-black text-emerald-600">🟢 Normal / Safe Route</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Map -->
+    <div class="relative rounded-3xl overflow-hidden border border-slate-200 shadow-2xl h-[480px] w-full" id="familyLiveMap"></div>
+
+    <!-- Rapid Helplines Bar for Family -->
+    <div class="bg-slate-900 text-white rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h4 class="font-bold text-sm">Need to reach emergency assistance immediately?</h4>
+            <p class="text-xs text-slate-400">Directly connect to National Police or Rajahmundry Control Room.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="tel:112" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition">Call 112</a>
+            <a href="tel:08832471033" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition">Rajahmundry Police</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const lat = {{ session.current_latitude }};
+        const lng = {{ session.current_longitude }};
+
+        const map = L.map('familyLiveMap').setView([lat, lng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        const travelerIcon = L.divIcon({
+            className: 'custom-pin bg-rose-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-2xl animate-bounce',
+            html: '<i class="fa-solid fa-person-walking text-lg"></i>',
+            iconSize: [40, 40]
+        });
+
+        L.marker([lat, lng], {icon: travelerIcon}).addTo(map)
+            .bindPopup(`<b>{{ session.traveler_name }}'s Live Position</b><br/>{{ session.current_location_name }}`)
+            .openPopup();
+    });
+</script>
+{% endblock %}

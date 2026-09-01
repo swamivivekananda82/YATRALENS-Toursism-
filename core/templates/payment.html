@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout — YATRALENS Payments{% endblock %}
+
+{% block content %}
+<section class="py-14 bg-gradient-to-br from-slate-100 via-white to-brand-50 min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+
+        <!-- Checkout header -->
+        <div class="mb-8 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white mx-auto shadow-lg">
+                <i class="fa-solid fa-shield-halved text-2xl"></i>
+            </div>
+            <h1 class="mt-4 text-2xl font-black text-slate-900">Secure Checkout</h1>
+            <p class="text-sm text-slate-500">Simulated payment gateway — no real money involved</p>
+        </div>
+
+        {% if messages %}
+            <div class="mb-5 space-y-2">
+                {% for message in messages %}
+                    <div class="rounded-xl px-3 py-2 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %} mr-1"></i>{{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+
+            <!-- Order Summary -->
+            <div class="md:col-span-2">
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 space-y-4">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-brand-600"></i> Order Summary
+                    </h2>
+                    <div class="space-y-2 text-sm">
+                        <p class="font-bold text-slate-800">{{ booking.package.title }}</p>
+                        <p class="text-xs text-slate-500">{{ booking.package.destination.name }}, {{ booking.package.destination.state }}</p>
+                    </div>
+                    <div class="border-t border-slate-100 pt-3 space-y-2 text-sm text-slate-600">
+                        <div class="flex justify-between"><span>Package price</span><span class="font-bold">₹{{ booking.unit_price|floatformat:"0" }}</span></div>
+                        <div class="flex justify-between"><span>Travelers</span><span class="font-bold">{{ booking.num_travelers }}</span></div>
+                        <div class="flex justify-between"><span>Subtotal</span><span class="font-bold">₹{{ booking.total_amount|floatformat:"0" }}</span></div>
+                        <div class="flex justify-between"><span>GST / Fees</span><span class="text-emerald-600 font-bold">FREE</span></div>
+                    </div>
+                    <div class="border-t border-slate-200 pt-3 flex items-center justify-between">
+                        <span class="font-black text-slate-900 text-sm">Total</span>
+                        <span class="text-2xl font-black text-brand-700">₹{{ booking.total_amount|floatformat:"0" }}</span>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-700 space-y-1.5">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-lock"></i> 256-bit SSL encrypted demo session</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> Booking Ref: <span class="font-mono font-bold">{{ booking.booking_ref|slice:":10"|upper }}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="md:col-span-3">
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-8">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-5 flex items-center gap-2">
+                        <i class="fa-solid fa-credit-card text-indigo-600"></i> Choose Payment Method
+                    </h2>
+
+                    <form method="post" id="paymentForm" class="space-y-5">
+                        {% csrf_token %}
+
+                        <!-- Method Tabs -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="method-option cursor-pointer">
+                                <input type="radio" name="method" value="UPI" checked class="sr-only peer">
+                                <div class="peer-checked:border-brand-600 peer-checked:bg-brand-50 border-2 border-slate-200 rounded-xl p-3 text-center hover:border-brand-300 transition">
+                                    <i class="fa-solid fa-mobile-screen-button text-xl text-emerald-600"></i>
+                                    <p class="text-[11px] font-bold mt-1">UPI</p>
+                                </div>
+                            </label>
+                            <label class="method-option cursor-pointer">
+                                <input type="radio" name="method" value="Card" class="sr-only peer">
+                                <div class="peer-checked:border-brand-600 peer-checked:bg-brand-50 border-2 border-slate-200 rounded-xl p-3 text-center hover:border-brand-300 transition">
+                                    <i class="fa-solid fa-credit-card text-xl text-indigo-600"></i>
+                                    <p class="text-[11px] font-bold mt-1">Card</p>
+                                </div>
+                            </label>
+                            <label class="method-option cursor-pointer">
+                                <input type="radio" name="method" value="NetBanking" class="sr-only peer">
+                                <div class="peer-checked:border-brand-600 peer-checked:bg-brand-50 border-2 border-slate-200 rounded-xl p-3 text-center hover:border-brand-300 transition">
+                                    <i class="fa-solid fa-building-columns text-xl text-amber-600"></i>
+                                    <p class="text-[11px] font-bold mt-1">NetBanking</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- UPI Panel -->
+                        <div id="panel-UPI" class="panel space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">UPI ID</label>
+                                <input name="upi_id" type="text" placeholder="yourname@bank"
+                                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                        </div>
+
+                        <!-- Card Panel -->
+                        <div id="panel-Card" class="panel hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Cardholder Name</label>
+                                <input name="holder_name" type="text" placeholder="Name on card"
+                                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Card Number</label>
+                                <input name="card_number" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" oninput="formatCard(this)"
+                                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Expiry</label>
+                                    <input name="expiry" type="text" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)"
+                                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">CVV</label>
+                                    <input name="cvv" type="password" maxlength="3" inputmode="numeric" placeholder="•••"
+                                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NetBanking Panel -->
+                        <div id="panel-NetBanking" class="panel hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Select Bank</label>
+                                <select name="bank" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                                    <option value="">-- Choose your bank --</option>
+                                    <option>State Bank of India</option>
+                                    <option>HDFC Bank</option>
+                                    <option>ICICI Bank</option>
+                                    <option>Axis Bank</option>
+                                    <option>Punjab National Bank</option>
+                                    <option>YES Bank</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pay button with processing animation -->
+                        <button type="submit" id="payBtn"
+                            class="w-full bg-gradient-to-r from-brand-700 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:opacity-95 transition flex items-center justify-center gap-2">
+                            <span id="payBtnText"><i class="fa-solid fa-lock mr-1"></i> Pay ₹{{ booking.total_amount|floatformat:"0" }} Securely</span>
+                        </button>
+                        <p class="text-center text-[11px] text-slate-400">Demo gateway — payment is simulated and not real.</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Payment method tab switching
+    const radios = document.querySelectorAll('input[name="method"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+            const panel = document.getElementById('panel-' + radio.value);
+            if (panel) panel.classList.remove('hidden');
+        });
+    });
+
+    function formatCard(el) {
+        el.value = el.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+    }
+    function formatExpiry(el) {
+        let v = el.value.replace(/\D/g, '').slice(0, 4);
+        if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+        el.value = v;
+    }
+
+    // Simulated processing spinner
+    const form = document.getElementById('paymentForm');
+    form.addEventListener('submit', (e) => {
+        const btnText = document.getElementById('payBtnText');
+        btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing payment...';
+        document.getElementById('payBtn').classList.add('opacity-70', 'pointer-events-none');
+    });
+</script>
+{% endblock %}

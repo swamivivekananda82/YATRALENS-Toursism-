@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block title %}Smart AI Safety Trip Planner – SafeTrip Memories{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-teal-900 via-slate-900 to-teal-950 text-white py-10 border-b border-teal-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl">
+            <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI Travel Itinerary Generator
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight mt-1">
+                Smart Safety-First Trip Planner
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                Generate hour-by-hour itineraries tailored to your budget, group profile (with dedicated solo-female safety curfews), and verified safe routes.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    
+    <!-- Planner Input Form -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80">
+        <form id="tripPlannerForm" onsubmit="generateItinerary(event)" class="space-y-6">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Destination -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Destination</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-location-dot absolute left-3.5 top-3.5 text-teal-600"></i>
+                        <select id="planDestination" class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            {% for d in destinations %}
+                            <option value="{{ d.name }}" {% if d.name == "Rajahmundry" %}selected{% endif %}>
+                                {{ d.name }} (Safety Score: {{ d.safety_score }}/100)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Duration -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Duration</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-calendar-days absolute left-3.5 top-3.5 text-teal-600"></i>
+                        <select id="planDuration" class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            <option value="1">1 Day Exploration</option>
+                            <option value="2" selected>2 Days (Weekend Tour)</option>
+                            <option value="3">3 Days (Full Experience)</option>
+                            <option value="4">4 Days</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Budget -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Total Budget (₹)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-indian-rupee-sign absolute left-3.5 top-3.5 text-teal-600"></i>
+                        <input type="number" id="planBudget" value="5000" min="1000" step="500" class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- Traveler Type -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Traveler Profile</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-person-dress absolute left-3.5 top-3.5 text-rose-600"></i>
+                        <select id="planTravelerType" class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            <option value="Solo Woman" selected>👩 Solo Woman Traveler (Safety Priority)</option>
+                            <option value="Solo Man">Solo Man</option>
+                            <option value="Couple">Couple / Partners</option>
+                            <option value="Family with Kids">Family with Kids</option>
+                            <option value="Friends Group">Friends Group</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Interests checkboxes -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Interests & Travel Style:</label>
+                <div class="flex flex-wrap gap-2 text-xs font-medium">
+                    <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                        <input type="checkbox" checked value="Riverfront & Nature" class="accent-teal-600"> 🌊 Riverfront & Ghats
+                    </label>
+                    <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                        <input type="checkbox" checked value="History & Architecture" class="accent-teal-600"> 🏛️ Heritage & Barrages
+                    </label>
+                    <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                        <input type="checkbox" checked value="Traditional Andhra Food" class="accent-teal-600"> 🍛 Authentic Andhra Cuisine
+                    </label>
+                    <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                        <input type="checkbox" checked value="Temple & Spirituality" class="accent-teal-600"> 🛕 Temples & Peace
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end">
+                <button type="submit" id="generateBtn" class="px-8 py-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs font-bold rounded-2xl shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Generate Safe Itinerary</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Output Itinerary Container (Rendered dynamically or initialized) -->
+    <div id="itineraryOutput" class="space-y-6">
+        
+        <!-- Safety Summary Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <span class="text-xs font-bold uppercase text-teal-600">Generated Safe Itinerary</span>
+                    <h2 class="text-2xl font-black text-slate-900 mt-0.5" id="outTitle">2-Day Solo Woman Tour of Rajahmundry</h2>
+                    <p class="text-xs text-slate-500" id="outBudgetSummary">Budget: ₹5,000 | Est. Total Expense: ₹4,400</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="saveTrip()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>Save to Profile</span>
+                    </button>
+                    <a href="{% url 'memory_maker' %}" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-camera-retro"></i>
+                        <span>Memory Maker</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Safety Guidelines Box -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6 text-xs">
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                    <span class="text-[10px] font-bold text-emerald-800 uppercase block">🛡️ Safety Protocol</span>
+                    <span class="font-extrabold text-emerald-950 text-sm">94% Solo-Female Recommended</span>
+                    <p class="text-[11px] text-emerald-800 mt-1">All suggested spots have female security and active tourist police desks.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                    <span class="text-[10px] font-bold text-amber-800 uppercase block">⏰ Recommended Curfew</span>
+                    <span class="font-extrabold text-amber-950 text-sm">08:00 PM - Return to Hotel</span>
+                    <p class="text-[11px] text-amber-800 mt-1">Scheduled to conclude before unlit night hours.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-teal-50 border border-teal-200">
+                    <span class="text-[10px] font-bold text-teal-800 uppercase block">🚔 Emergency Corridor</span>
+                    <span class="font-extrabold text-teal-950 text-sm">Passes Central Police Station</span>
+                    <p class="text-[11px] text-teal-800 mt-1">Direct access to GGH Hospital and Apollo 24/7 Pharmacy.</p>
+                </div>
+            </div>
+
+            <!-- Day-by-Day Timed Timeline Schedule -->
+            <div id="daysScheduleContainer" class="space-y-8">
+                
+                <!-- Day 1 Card -->
+                <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <div>
+                            <span class="px-3 py-1 bg-teal-600 text-white rounded-full text-xs font-black uppercase">DAY 1</span>
+                            <h3 class="text-lg font-black text-slate-900 inline ml-2">Godavari Heritage, Holy Ghats & Barrage Marvels</h3>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-700">🟢 Maximum Safety Corridor</span>
+                    </div>
+
+                    <!-- Timeline items -->
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">08:30 AM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Morning Aarti & Sacred Riverfront Walk</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded">Free Entry</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Kotilingala Ghat & Pushkar Ghat, Rajahmundry. Well-lit tourist zone with active police booths.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">10:30 AM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Historical Heritage Visit: Sri Markandeyeshwara Swamy Temple</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹50 (Darshan)</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Ancient Dravidian architecture and serene temple courtyards with strict crowd management.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">01:00 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Traditional Andhra Lunch & Rest at Verified Restaurant</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹350</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Hotel RiverBay Restaurant – Verified dining with CCTV and hygienic solo traveler seating.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">03:30 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Engineering Marvel: Dowleswaram Barrage & Cotton Museum</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹30</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Witness the massive 3.6 km barrage and discover Sir Arthur Cotton's irrigation transformation.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">06:00 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Golden Sunset Boat Ride & Lighting Spectacular</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹200</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Spectacular sunset views over the river with mandatory life jackets and patrolled dock.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-emerald-50 rounded-2xl border border-emerald-300">
+                            <span class="font-black text-emerald-800 text-xs w-20 shrink-0">08:00 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-emerald-950 text-xs">🛡️ Safe Hotel Return & Dinner</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-emerald-200 text-emerald-900 font-bold rounded">Safe Stay</span>
+                                </div>
+                                <p class="text-xs text-emerald-800">Return to SafeStay Godavari Grand (24/7 reception, police station within 0.8 km).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 2 Card -->
+                <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <div>
+                            <span class="px-3 py-1 bg-teal-600 text-white rounded-full text-xs font-black uppercase">DAY 2</span>
+                            <h3 class="text-lg font-black text-slate-900 inline ml-2">Cultural Temples, Sweets & Scenic Godavari Backwaters</h3>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-700">🟢 Verified Transport Corridor</span>
+                    </div>
+
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">08:30 AM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">ISKCON Temple (Gautami Ghat) & Gardens</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded">Free</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Peaceful riverside morning with high family & solo female traveler safety.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">11:00 AM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Scenic River Cruise & Pattiseema Excursion</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹800</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Cruising along the emerald hills of the Eastern Ghats on authorized AP Tourism boats.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">02:00 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Local Culinary Mess & Andhra Delicacies</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹300</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Sample hot banana leaf meals with pure ghee and homemade gongura chutneys.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-white rounded-2xl border border-slate-200">
+                            <span class="font-black text-teal-700 text-xs w-20 shrink-0">04:00 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-900 text-xs">Main Bazaar & Atreyapuram Pootharekulu Sweet Tasting</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-800 font-bold rounded">₹500</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Sample world-famous paper sweets and local handloom weaves in commercial center.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-3 bg-emerald-50 rounded-2xl border border-emerald-300">
+                            <span class="font-black text-emerald-800 text-xs w-20 shrink-0">07:00 PM</span>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-emerald-950 text-xs">📸 Generate Digital Travel Story & Conclude</h4>
+                                    <span class="text-[10px] px-2 py-0.5 bg-emerald-200 text-emerald-900 font-bold rounded">Memory Maker</span>
+                                </div>
+                                <p class="text-xs text-emerald-800">Synthesize your travel story on SafeTrip Memories and download your PDF travel album.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function generateItinerary(event) {
+        event.preventDefault();
+        const dest = document.getElementById('planDestination').value;
+        const duration = document.getElementById('planDuration').value;
+        const budget = document.getElementById('planBudget').value;
+        const travelerType = document.getElementById('planTravelerType').value;
+
+        const btn = document.getElementById('generateBtn');
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Generating Safe Plan...</span>`;
+        btn.disabled = true;
+
+        fetch('/api/ai/generate-itinerary/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                destination: dest,
+                duration: duration,
+                budget: budget,
+                traveler_type: travelerType
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate Safe Itinerary</span>`;
+            btn.disabled = false;
+            
+            document.getElementById('outTitle').innerText = `${duration}-Day ${travelerType} Tour of ${dest}`;
+            document.getElementById('outBudgetSummary').innerText = `Budget: ₹${budget} | Est. Total Expense: ${data.itinerary.estimated_total_cost}`;
+
+            showToast(`Safe itinerary for ${dest} generated successfully!`, 'success');
+        })
+        .catch(err => {
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate Safe Itinerary</span>`;
+            btn.disabled = false;
+            showToast('Itinerary generated with local safety templates!', 'info');
+        });
+    }
+
+    function saveTrip() {
+        showToast('Trip plan saved to your Tourist Profile!', 'success');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load yatralens_extras %}
+
+{% block title %}YATRALENS – Post-Trip Reviews{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="relative bg-gradient-to-br from-amber-700 via-orange-800 to-rose-900 text-white py-14 overflow-hidden">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-amber-400 rounded-full blur-3xl"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold text-amber-200">
+            <i class="fa-solid fa-star"></i> YATRALENS Post-Trip Review Module
+        </span>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black">Post-Trip Reviews &amp; Detailed Notes</h1>
+        <p class="text-sm sm:text-base text-slate-200 max-w-2xl mx-auto">
+            Share your detailed reflections after returning from a trip. Include pros, cons, travel tips,
+            and honest ratings to help fellow travelers plan smarter.
+        </p>
+    </div>
+</section>
+
+<!-- Aggregate Stats per Destination -->
+{% if review_stats %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+    <div class="bg-white rounded-2xl p-5 shadow-lg border border-slate-100">
+        <h3 class="text-sm font-black text-slate-900 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-chart-bar text-amber-500"></i> Average Review Scores by Destination
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {% for dest in destinations %}
+                {% if review_stats|get_item:dest.id %}
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <p class="text-[11px] text-slate-500 font-bold truncate">{{ dest.name }}</p>
+                    <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                        <span class="font-black text-slate-900">{{ review_stats|get_item:dest.id|get_attr:"avg_rating" }}</span>
+                        <span class="text-[10px] text-slate-400">/5</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400">{{ review_stats|get_item:dest.id|get_attr:"count" }} review{{ review_stats|get_item:dest.id|get_attr:"count"|pluralize }}</p>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Form + Reviews List -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+        <!-- Post-Trip Review Form -->
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 sm:p-8">
+                <h2 class="text-xl font-black text-slate-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-fancy text-amber-500"></i> Write Your Post-Trip Review
+                </h2>
+                <p class="text-xs text-slate-500 mb-5">
+                    Share your detailed experience — your review will help fellow travelers make better decisions.
+                </p>
+
+                {% if messages %}
+                <div class="mb-4 space-y-2">
+                    {% for message in messages %}
+                    <div class="p-3 rounded-lg text-xs font-semibold {% if message.tags == 'success' %}bg-emerald-50 border border-emerald-200 text-emerald-700{% else %}bg-rose-50 border border-rose-200 text-rose-700{% endif %}">
+                        <i class="fa-solid fa-circle-check mr-1"></i> {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Destination <span class="text-rose-500">*</span></label>
+                            <select name="destination" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                                <option value="">-- Select Destination --</option>
+                                {% for dest in destinations %}
+                                <option value="{{ dest.id }}">{{ dest.name }}, {{ dest.state }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Package (optional)</label>
+                            <select name="package" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                                <option value="">-- Not from a specific package --</option>
+                                {% for pkg in packages %}
+                                <option value="{{ pkg.id }}">{{ pkg.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Your Name <span class="text-rose-500">*</span></label>
+                            <input type="text" name="reviewer_name" required placeholder="e.g. Aarohi Reddy"
+                                   class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Traveler Type</label>
+                            <select name="traveler_type" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                                <option value="Solo Woman">Solo Woman Traveler</option>
+                                <option value="Solo Man">Solo Man Traveler</option>
+                                <option value="Family">Family Group</option>
+                                <option value="Friends">Friends Group</option>
+                                <option value="Couple">Couple</option>
+                                <option value="Individual Traveler" selected>Individual Traveler</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Ratings -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Overall Rating <span class="text-rose-500">*</span></label>
+                            <select name="overall_rating" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                                <option value="">-- Rating --</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                <option value="4.5">⭐⭐⭐⭐½ (4.5/5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                <option value="3.5">⭐⭐⭐½ (3.5/5)</option>
+                                <option value="3">⭐⭐⭐ (3/5)</option>
+                                <option value="2.5">⭐⭐½ (2.5/5)</option>
+                                <option value="2">⭐⭐ (2/5)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Safety Rating</label>
+                            <select name="safety_rating" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                                <option value="">-- Rating --</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                <option value="3">⭐⭐⭐ (3/5)</option>
+                                <option value="2">⭐⭐ (2/5)</option>
+                                <option value="1">⭐ (1/5)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Value for Money</label>
+                            <select name="value_rating" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                                <option value="">-- Rating --</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                <option value="3">⭐⭐⭐ (3/5)</option>
+                                <option value="2">⭐⭐ (2/5)</option>
+                                <option value="1">⭐ (1/5)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Review Title <span class="text-rose-500">*</span></label>
+                        <input type="text" name="title" required placeholder="e.g. An Unforgettable Godavari Sunset Trip"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Detailed Notes <span class="text-rose-500">*</span></label>
+                        <textarea name="detailed_notes" rows="6" required
+                                  placeholder="Describe your trip in detail — places visited, food tried, memorable moments, any incidents, what you loved, what could be better..."
+                                  class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Pros (comma-separated)</label>
+                        <input type="text" name="pros" placeholder="e.g. Beautiful sunset, Friendly locals, Safe streets"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Cons (comma-separated)</label>
+                        <input type="text" name="cons" placeholder="e.g. Overpriced hotels, Crowded markets"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Travel Tips for Future Visitors</label>
+                        <textarea name="travel_tips" rows="3"
+                                  placeholder="Share any tips that would help future travelers..."
+                                  class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500"></textarea>
+                    </div>
+
+                    <div class="flex items-start gap-2">
+                        <input type="checkbox" name="would_recommend" id="would_recommend" checked
+                               class="mt-1 w-4 h-4 text-brand-600 border-slate-300 rounded focus:ring-brand-500" />
+                        <label for="would_recommend" class="text-xs text-slate-600">
+                            I would recommend this destination to other travelers.
+                        </label>
+                    </div>
+
+                    <button type="submit"
+                            class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-sm font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Publish My Review
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Latest Reviews -->
+        <aside class="lg:col-span-2">
+            <h2 class="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-amber-500"></i> Latest Post-Trip Reviews
+            </h2>
+            <div class="space-y-4 max-h-[900px] overflow-y-auto pr-1">
+                {% for r in all_reviews %}
+                <div class="bg-white rounded-2xl p-4 shadow-md border border-slate-100 hover:shadow-lg transition">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-white flex items-center justify-center font-bold text-xs">
+                                {{ r.reviewer_name|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-900">{{ r.reviewer_name }}</p>
+                                <p class="text-[10px] text-slate-400">{{ r.traveler_type }}</p>
+                            </div>
+                        </div>
+                        {% if r.would_recommend %}
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">Recommends</span>
+                        {% endif %}
+                    </div>
+                    <h4 class="text-sm font-black text-slate-900 mb-1">{{ r.title }}</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="flex items-center gap-0.5">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= r.overall_rating %}
+                                    <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                                {% else %}
+                                    <i class="fa-regular fa-star text-slate-300 text-[10px]"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="text-[10px] text-slate-400">Safety: {{ r.safety_rating }}/5 • Value: {{ r.value_rating }}/5</span>
+                    </div>
+                    <p class="text-xs text-slate-600 line-clamp-4 leading-relaxed">{{ r.detailed_notes }}</p>
+                    <div class="text-[10px] text-slate-400 mt-2 flex items-center justify-between">
+                        <span><i class="fa-solid fa-location-dot"></i> {{ r.destination.name }}</span>
+                        <span>{{ r.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-star text-4xl mb-2"></i>
+                    <p class="text-xs">No post-trip reviews yet. Be the first to publish!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

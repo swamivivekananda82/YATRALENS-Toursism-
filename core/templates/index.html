@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+
+{% block title %}YATRALENS — Discover India's Curated Tourism Packages with Real-Time Crime & Safety Intelligence{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-br from-slate-900 via-brand-950 to-slate-900 text-white overflow-hidden py-16 lg:py-24">
+    <!-- Decorative background glow -->
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-500 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-500 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-4xl mx-auto space-y-8">
+
+            <!-- Hero Intro Pill (welcome message) -->
+            {% if user.is_authenticated %}
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-emerald-200 text-sm font-semibold">
+                <i class="fa-solid fa-hand-sparkles"></i>
+                Welcome back, {{ user.get_full_name|default:user.username }}!
+            </div>
+            {% else %}
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur text-sm font-semibold text-brand-200">
+                <i class="fa-solid fa-hand-sparkles"></i>
+                Welcome to your intelligent travel &amp; safety companion
+            </div>
+            {% endif %}
+
+            <!-- Main Heading -->
+            <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-tight">
+                <span class="bg-gradient-to-r from-brand-300 via-emerald-300 to-amber-300 bg-clip-text text-transparent">
+                    YATRALENS
+                </span>
+            </h1>
+
+            <p class="text-lg sm:text-xl text-slate-300 font-normal leading-relaxed max-w-3xl mx-auto">
+                Discover curated tourism packages for every corner of India. Check real-time crime rates,
+                read post-trip reviews from fellow travelers, share your feedback, and turn every journey
+                into a beautifully preserved digital memory.
+            </p>
+
+            <!-- Welcome CTA Buttons -->
+            <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <a href="{% url 'tourism_packages' %}" class="px-6 py-3 bg-gradient-to-r from-brand-500 to-emerald-500 hover:from-brand-600 hover:to-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-suitcase-rolling"></i> Explore Packages
+                </a>
+                <a href="{% url 'safety_intelligence' %}" class="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white text-sm font-bold rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Check Safety Intel
+                </a>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> Get Started — It's Free
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Introduction: How YATRALENS helps you -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto pt-4">
+                <div class="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur text-left">
+                    <i class="fa-solid fa-shield-halved text-2xl text-emerald-400"></i>
+                    <h4 class="font-bold text-white text-sm mt-2">Plan Safely</h4>
+                    <p class="text-xs text-slate-300 mt-1">Real-time crime data, safety scores & safe route planning for every destination.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur text-left">
+                    <i class="fa-solid fa-suitcase-rolling text-2xl text-brand-400"></i>
+                    <h4 class="font-bold text-white text-sm mt-2">Book Packages</h4>
+                    <p class="text-xs text-slate-300 mt-1">Curated tourism packages with secure booking and a simple checkout experience.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur text-left">
+                    <i class="fa-solid fa-camera-retro text-2xl text-amber-400"></i>
+                    <h4 class="font-bold text-white text-sm mt-2">Remember Forever</h4>
+                    <p class="text-xs text-slate-300 mt-1">Automatically turn every journey into a beautifully preserved digital travel story.</p>
+                </div>
+            </div>
+
+            <!-- Dual Search: Packages + Destinations -->
+            <div class="pt-6 max-w-3xl mx-auto space-y-4">
+                <!-- Packages Search -->
+                <form action="{% url 'tourism_packages' %}" method="GET" class="flex flex-col sm:flex-row gap-2 bg-white/15 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl">
+                    <div class="flex-1 flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-slate-900">
+                        <i class="fa-solid fa-magnifying-glass-location text-brand-600 text-lg"></i>
+                        <input type="text" name="q" placeholder="Search packages (e.g. Cultural, Adventure, Weekend Getaway)..."
+                               class="w-full bg-transparent border-none focus:outline-none text-sm font-medium placeholder:text-slate-400" />
+                    </div>
+                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-brand-500 to-emerald-500 hover:from-brand-600 hover:to-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                        <span>Explore Packages</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+
+                <!-- Quick Destination Tags -->
+                <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300">
+                    <span class="text-slate-400 font-medium">🔥 Popular Destinations:</span>
+                    {% for dest in destinations|slice:":5" %}
+                    <a href="{% url 'safety_intelligence_dest' dest.name %}" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition border border-white/10">
+                        {% if dest.safety_score >= 75 %}🟢{% elif dest.safety_score >= 50 %}🟡{% else %}🔴{% endif %} {{ dest.name }} ({{ dest.safety_score }}/100)
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Crime Data Snapshot Bar -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Live Alerts Carousel -->
+        <div class="sm:col-span-2 bg-white rounded-2xl p-5 shadow-xl border border-slate-100 hover:border-amber-300 hover:shadow-2xl transition">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-slate-900 text-base mb-1">Live Safety Advisories</h3>
+                    <div class="text-xs text-slate-500 space-y-1">
+                        {% for alert in alerts %}
+                        <div class="flex items-start gap-2">
+                            <span class="text-amber-400">⚠️</span>
+                            <span><b>{{ alert.title }}</b> — {{ alert.message|truncatechars:80 }}</span>
+                        </div>
+                        {% empty %}
+                        <span class="text-slate-400">No active advisories. All destinations are clear.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Reviews -->
+        <div class="bg-white rounded-2xl p-5 shadow-xl border border-slate-100 hover:border-brand-300 hover:shadow-2xl transition text-center">
+            <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl mx-auto mb-2">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-base mb-1">Post-Trip Reviews</h3>
+            <p class="text-2xl font-black text-slate-900 mb-1">{{ review_stats.total_reviews|default:"0" }}</p>
+            <p class="text-xs text-slate-400">Verified traveler stories</p>
+        </div>
+
+        <!-- Customer Feedback -->
+        <div class="bg-white rounded-2xl p-5 shadow-xl border border-slate-100 hover:border-purple-300 hover:shadow-2xl transition text-center">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mx-auto mb-2">
+                <i class="fa-solid fa-comment-dots"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-base mb-1">Customer Feedback</h3>
+            <p class="text-2xl font-black text-slate-900 mb-1">{{ review_stats.total_feedback|default:"0" }}</p>
+            <p class="text-xs text-slate-400">Average rating: {{ review_stats.avg_rating|default:"—" }}/5</p>
+        </div>
+    </div>
+</section>
+
+<!-- 5 Core Pillars of YATRALENS -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 -mt-4 relative z-20">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+
+        <!-- Pillar 1: Tourism Packages -->
+        <a href="{% url 'tourism_packages' %}" class="bg-white rounded-2xl p-6 shadow-xl border border-slate-100 hover:border-indigo-300 hover:shadow-2xl transition group text-center">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl mx-auto mb-3 group-hover:scale-110 transition">
+                <i class="fa-solid fa-suitcase-rolling"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Tourism Packages</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Curated weekend, adventure, cultural & luxury packages with verified stays.
+            </p>
+        </a>
+
+        <!-- Pillar 2: Crime Intelligence -->
+        <a href="{% url 'safety_intelligence' %}" class="bg-white rounded-2xl p-6 shadow-xl border border-slate-100 hover:border-emerald-300 hover:shadow-2xl transition group text-center">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mx-auto mb-3 group-hover:scale-110 transition">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Crime Intelligence</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Real-time crime stats, heatmaps, and zone-level risk meters.
+            </p>
+        </a>
+
+        <!-- Pillar 3: Women Safe Tourism -->
+        <a href="{% url 'women_safety' %}" class="bg-white rounded-2xl p-6 shadow-xl border border-slate-100 hover:border-rose-300 hover:shadow-2xl transition group text-center">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mx-auto mb-3 group-hover:scale-110 transition">
+                <i class="fa-solid fa-person-dress"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Women Safe Travel</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Live GPS sharing, 3-sec SOS, and women-friendly verified stays.
+            </p>
+        </a>
+
+        <!-- Pillar 4: Reviews -->
+        <a href="{% url 'post_trip_review' %}" class="bg-white rounded-2xl p-6 shadow-xl border border-slate-100 hover:border-amber-300 hover:shadow-2xl transition group text-center">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mx-auto mb-3 group-hover:scale-110 transition">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Post-Trip Reviews</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Read traveler reviews and share your detailed post-trip notes.
+            </p>
+        </a>
+
+        <!-- Pillar 5: Memory Maker -->
+        <a href="{% url 'memory_maker' %}" class="bg-white rounded-2xl p-6 shadow-xl border border-slate-100 hover:border-teal-300 hover:shadow-2xl transition group text-center">
+            <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl mx-auto mb-3 group-hover:scale-110 transition">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">AI Memory Maker</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Automatically turns visited spots, food, and photos into a digital storybook with PDF export.
+            </p>
+        </a>
+
+    </div>
+</section>
+
+<!-- Featured Tourism Packages Carousel -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+        <div>
+            <span class="text-xs font-bold text-brand-600 uppercase tracking-wider">Curated Packages</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">🔥 Featured Tourism Packages</h2>
+        </div>
+        <a href="{% url 'tourism_packages' %}" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
+            View All Packages <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+    </div>
+
+    <!-- Package Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for pkg in featured_packages %}
+        <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 hover:shadow-2xl hover:border-brand-300 transition duration-300 flex flex-col group">
+
+            <!-- Image -->
+            <div class="relative h-48 w-full overflow-hidden bg-slate-200">
+                <img src="{{ pkg.image_url|default:'https://via.placeholder.com/600x400' }}" alt="{{ pkg.title }}"
+                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <!-- Package Type Badge -->
+                <div class="absolute top-4 left-4">
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-white/90 text-slate-800">
+                        {{ pkg.get_package_type_display }}
+                    </span>
+                </div>
+                <!-- Duration Badge -->
+                <div class="absolute top-4 right-4">
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-white/90 text-slate-800">
+                        🕐 {{ pkg.duration_days }}D
+                    </span>
+                </div>
+            </div>
+
+            <!-- Card Content -->
+            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                    <h3 class="text-xl font-black text-slate-900 leading-tight group-hover:text-brand-700 transition">{{ pkg.title }}</h3>
+                    <span class="text-xs text-slate-500">{{ pkg.destination.name }}, {{ pkg.destination.state }}</span>
+                </div>
+
+                <!-- Highlights -->
+                <div class="flex flex-wrap gap-1.5 text-[10px]">
+                    {% for highlight in pkg.highlights|slice:":3" %}
+                    <span class="px-2 py-1 rounded-md bg-slate-100 text-slate-600 font-medium">{{ highlight }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Price & Rating -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div>
+                        <span class="text-2xl font-black text-brand-700">₹{{ pkg.price|floatformat:"0" }}</span>
+                        <span class="text-xs text-slate-400">/{{ pkg.duration_days }}D</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                        <span class="font-bold text-slate-900">{{ pkg.rating }}</span>
+                        <span class="text-[10px] text-slate-400">({{ pkg.review_count }})</span>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <a href="{% url 'package_detail' pkg.slug %}"
+                   class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-emerald-500 hover:from-brand-600 hover:to-emerald-600 text-white text-xs font-bold text-center transition flex items-center justify-center gap-1.5">
+                    <span>View Package Details</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-slate-400">
+            <i class="fa-solid fa-suitcase-rolling text-4xl mb-3"></i>
+            <p>No featured packages available yet. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Crime Rate Intelligence Section -->
+<section class="bg-gradient-to-br from-slate-50 via-white to-slate-50 py-16 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+            <div>
+                <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Crime Intelligence</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">🛡️ Real-Time Crime Rate Data</h2>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 md:mt-0 max-w-md">
+                Crime statistics refreshed periodically from local police records and smart-city surveillance feeds. 
+                Drill into zone-level heatmaps, historical trend charts, and incident reports per destination.
+            </p>
+        </div>
+
+        <!-- Crime Snapshot Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for snap in crime_snapshot %}
+            <div class="bg-white rounded-2xl p-5 shadow-lg border border-slate-200/80 hover:shadow-xl hover:border-emerald-300 transition group">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900">{{ snap.destination.name }}</h3>
+                        <span class="text-xs text-slate-400">{{ snap.destination.state }}</span>
+                    </div>
+                    <span class="text-xs font-bold {% if snap.destination.safety_score >= 75 %}text-emerald-600{% elif snap.destination.safety_score >= 50 %}text-amber-600{% else %}text-rose-600{% endif %}">
+                        {{ snap.destination.safety_score }}/100
+                    </span>
+                </div>
+
+                <!-- Crime Categories -->
+                <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                    <div class="bg-slate-50 rounded-lg p-2">
+                        <span class="text-[9px] text-slate-400 uppercase font-bold">Theft</span>
+                        <span class="font-black text-slate-800 text-sm">{{ snap.destination.theft_reports }}</span>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-2">
+                        <span class="text-[9px] text-slate-400 uppercase font-bold">Harassment</span>
+                        <span class="font-black text-slate-800 text-sm">{{ snap.destination.harassment_reports }}</span>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-2">
+                        <span class="text-[9px] text-slate-400 uppercase font-bold">Violent</span>
+                        <span class="font-black text-slate-800 text-sm">{{ snap.destination.violent_crime_reports }}</span>
+                    </div>
+                </div>
+
+                <!-- Trend & Last Updated -->
+                <div class="flex items-center justify-between text-xs text-slate-500 mb-3">
+                    <span class="flex items-center gap-1">
+                        {{ snap.destination.crime_trend_icon }} Trend: {{ snap.destination.crime_trend }}
+                    </span>
+                    {% if snap.destination.last_crime_update %}
+                    <span>Updated: {{ snap.destination.last_crime_update|date:"M d" }}</span>
+                    {% else %}
+                    <span>Data: {{ snap.destination.get_crime_data_source_display }}
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'safety_intelligence_dest' snap.destination.name %}"
+                   class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-chart-line"></i>
+                    View Crime Heatmap
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- View All Crime Data CTA -->
+        <div class="text-center mt-10">
+            <a href="{% url 'safety_intelligence' %}"
+               class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-lg transition">
+                <i class="fa-solid fa-globe-americas"></i>
+                Explore All Destinations & Crime Data
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Post-Trip Reviews Social Proof -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+        <div>
+            <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Traveler Voices</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">⭐ What Travelers Are Saying</h2>
+        </div>
+        <a href="{% url 'post_trip_review' %}" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
+            Read All Reviews <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% for review in recent_reviews %}
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-6 hover:shadow-xl hover:border-amber-300 transition group flex flex-col">
+            <!-- Reviewer Header -->
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-amber-400 text-white flex items-center justify-center font-bold text-sm">
+                    {{ review.reviewer_name|first|upper }}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.overall_rating %}
+                                <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                            {% else %}
+                                <i class="fa-regular fa-star text-slate-300 text-xs"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="text-xs font-bold text-slate-700">{{ review.overall_rating }}/5</span>
+                    </div>
+                    <p class="text-xs text-slate-500">{{ review.reviewer_name }} • {{ review.destination.name }}</p>
+                </div>
+            </div>
+
+            <!-- Review Content -->
+            <h3 class="text-md font-black text-slate-900 mb-2 leading-tight">{{ review.title|default:"Great Trip!" }}</h3>
+            <p class="text-sm text-slate-700 italic leading-relaxed mb-3 flex-1">
+                "{{ review.detailed_notes|truncatechars:160 }}"
+            </p>
+
+            <!-- Review Footer -->
+            <div class="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100">
+                <span class="flex items-center gap-1">
+                    <i class="fa-solid fa-calendar text-slate-300"></i>
+                    {{ review.created_at|date:"M d, Y" }}
+                </span>
+                <span class="flex items-center gap-1">
+                    <i class="fa-solid fa-user-group text-slate-300"></i>
+                    {{ review.traveler_type }}
+                </span>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-slate-400">
+            <i class="fa-solid fa-star text-4xl mb-3"></i>
+            <p>No reviews yet. Be the first to share your journey!</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Customer Feedback CTA -->
+<section class="bg-gradient-to-r from-slate-900 via-brand-900 to-slate-900 text-white rounded-3xl py-12 px-6 sm:px-8 lg:px-16 shadow-2xl">
+    <div class="max-w-5xl mx-auto text-center">
+        <h3 class="text-2xl sm:text-3xl font-black mb-3">Have Questions? Share Your Feedback.</h3>
+        <p class="text-sm text-slate-300 max-w-xl mx-auto mb-6">
+            Your experience matters. Whether it's about crime data accuracy, package suggestions, or safety features,
+            we want to hear from you.
+        </p>
+        <a href="{% url 'customer_feedback' %}"
+           class="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900 text-xs font-bold rounded-xl shadow-lg hover:bg-slate-100 transition">
+            <i class="fa-solid fa-comment-dots"></i>
+            Submit Feedback
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Dynamic safety score color helper for any inline JS needing it
+function safetyColor(score) {
+    if (score >= 75) return 'text-emerald-600';
+    if (score >= 50) return 'text-amber-600';
+    return 'text-rose-600';
+}
+</script>
+{% endblock %}

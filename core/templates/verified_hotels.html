@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Verified Safe Hotels & Accommodations – SafeTrip Memories{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-8 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                    <i class="fa-solid fa-hotel mr-1"></i> Verified Accommodations
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                    Safe & Women-Friendly Certified Hotels
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Audited for 24/7 front desk, female staff presence, CCTV surveillance, and exact distance to emergency services.
+                </p>
+            </div>
+
+            <!-- Destination Filter Form -->
+            <form method="GET" class="flex flex-wrap items-center gap-2">
+                <select name="destination" onchange="this.form.submit()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">All Destinations</option>
+                    {% for d in destinations %}
+                    <option value="{{ d.id }}" {% if selected_dest_id|stringformat:"s" == d.id|stringformat:"s" %}selected{% endif %}>
+                        {{ d.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <label class="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-rose-700 cursor-pointer shadow-sm">
+                    <input type="checkbox" name="women_friendly" value="true" onchange="this.form.submit()" {% if request.GET.women_friendly %}checked{% endif %} class="accent-rose-600" />
+                    <span><i class="fa-solid fa-person-dress"></i> Women-Friendly Only</span>
+                </label>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <!-- Hotels Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for hotel in hotels %}
+        <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 hover:shadow-2xl hover:border-indigo-300 transition duration-300 flex flex-col justify-between group">
+            
+            <!-- Top Image & Badges -->
+            <div class="relative h-52 w-full overflow-hidden bg-slate-200">
+                <img src="{{ hotel.image_url }}" alt="{{ hotel.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
+                
+                <!-- Verified Status Pill -->
+                <div class="absolute top-4 left-4 flex flex-col gap-1.5">
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-600 text-white flex items-center gap-1 shadow-md">
+                        <i class="fa-solid fa-circle-check"></i> SafeTrip Verified
+                    </span>
+                    {% if hotel.women_friendly %}
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-rose-600 text-white flex items-center gap-1 shadow-md">
+                        <i class="fa-solid fa-person-dress"></i> Women-Friendly
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Rating -->
+                <div class="absolute top-4 right-4 bg-white/95 backdrop-blur px-2.5 py-1 rounded-xl shadow-md flex items-center gap-1 text-xs font-black text-slate-900">
+                    <i class="fa-solid fa-star text-amber-500"></i> {{ hotel.rating }}/5
+                </div>
+
+                <!-- Hotel Name & City on Image -->
+                <div class="absolute bottom-3 left-4 right-4 text-white">
+                    <span class="text-[10px] text-teal-300 font-bold uppercase">{{ hotel.destination.name }}</span>
+                    <h3 class="text-xl font-black leading-tight">{{ hotel.name }}</h3>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                
+                <div>
+                    <!-- Distance to Emergency Services Indicators (Crucial Requirement) -->
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs py-2 bg-slate-50 rounded-2xl border border-slate-100 mb-3">
+                        <div class="p-1">
+                            <span class="text-[9px] text-slate-400 font-bold uppercase block">City Center</span>
+                            <span class="font-black text-slate-800 text-xs">📍 {{ hotel.dist_city_center }} km</span>
+                        </div>
+                        <div class="p-1 border-x border-slate-200">
+                            <span class="text-[9px] text-teal-600 font-bold uppercase block">Police Station</span>
+                            <span class="font-black text-teal-700 text-xs">🚔 {{ hotel.dist_police_station }} km</span>
+                        </div>
+                        <div class="p-1">
+                            <span class="text-[9px] text-rose-600 font-bold uppercase block">Hospital</span>
+                            <span class="font-black text-rose-700 text-xs">🏥 {{ hotel.dist_hospital }} km</span>
+                        </div>
+                    </div>
+
+                    <!-- Safety Facilities Tags -->
+                    <div class="flex flex-wrap gap-1.5 text-[10px]">
+                        {% if hotel.reception_24_7 %}
+                        <span class="px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 font-bold border border-teal-200">
+                            <i class="fa-solid fa-clock mr-1"></i> 24/7 Reception
+                        </span>
+                        {% endif %}
+                        {% if hotel.cctv_security %}
+                        <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 font-bold border border-indigo-200">
+                            <i class="fa-solid fa-video mr-1"></i> CCTV Security
+                        </span>
+                        {% endif %}
+                        <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 font-bold border border-amber-200">
+                            <i class="fa-solid fa-lock mr-1"></i> Electronic Locks
+                        </span>
+                    </div>
+
+                    <!-- Amenities list -->
+                    <p class="text-xs text-slate-500 mt-3 leading-relaxed">
+                        <i class="fa-solid fa-circle-info text-slate-400 mr-1"></i> {{ hotel.amenities }}
+                    </p>
+                </div>
+
+                <!-- Price & Booking Inquiry Action -->
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Price Guide</span>
+                        <span class="text-sm font-black text-slate-900">{{ hotel.price_range }}</span>
+                    </div>
+                    
+                    <a href="tel:{{ hotel.contact_number }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-phone text-[10px] text-teal-400"></i>
+                        <span>Contact Frontdesk</span>
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="col-span-3 text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
+            <i class="fa-solid fa-hotel text-4xl text-slate-300 mb-3"></i>
+            <h3 class="text-base font-bold text-slate-700">No hotels matched your filter.</h3>
+            <p class="text-xs text-slate-500 mt-1">Try resetting the filter to view all verified safe accommodations.</p>
+            <a href="{% url 'verified_hotels' %}" class="inline-block mt-4 px-4 py-2 bg-teal-600 text-white text-xs font-bold rounded-xl">View All Hotels</a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

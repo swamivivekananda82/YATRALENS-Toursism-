@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ package.title }} – YATRALENS{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="relative bg-slate-900 text-white">
+    <div class="absolute inset-0">
+        <img src="{{ package.image_url|default:package.destination.image_url }}" alt="{{ package.title }}"
+             class="w-full h-full object-cover opacity-50" />
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <a href="{% url 'tourism_packages' %}" class="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:text-white mb-4">
+            <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to all packages
+        </a>
+        <div class="max-w-3xl space-y-4">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-indigo-500/90 text-white">
+                    {{ package.get_package_type_display }}
+                </span>
+                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/90 text-white">
+                    <i class="fa-solid fa-shield-halved"></i> Safety Score: {{ package.destination.safety_score }}/100
+                </span>
+                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-amber-500/90 text-white">
+                    <i class="fa-solid fa-star"></i> {{ package.rating }} ({{ package.review_count }} reviews)
+                </span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">{{ package.title }}</h1>
+            <p class="text-base sm:text-lg text-slate-200">{{ package.subtitle|default:package.description|truncatechars:160 }}</p>
+            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-200 pt-2">
+                <span><i class="fa-solid fa-location-dot text-brand-300"></i> {{ package.destination.name }}, {{ package.destination.state }}</span>
+                <span><i class="fa-solid fa-clock text-brand-300"></i> {{ package.duration_days }} Day{{ package.duration_days|pluralize }}</span>
+                <span><i class="fa-solid fa-users text-brand-300"></i> Group of {{ package.max_group_size }}</span>
+                <span><i class="fa-solid fa-mountain text-brand-300"></i> {{ package.get_difficulty_display }} difficulty</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sticky Booking Bar -->
+<div class="sticky top-16 z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div>
+            <span class="text-2xl sm:text-3xl font-black text-brand-700">₹{{ package.price|floatformat:"0" }}</span>
+            <span class="text-xs text-slate-400">/ person • {{ package.duration_days }} Day{{ package.duration_days|pluralize }}</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{% url 'safety_intelligence_dest' package.destination.name %}" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-halved"></i> View Crime Intel
+            </a>
+            <a href="{% url 'post_trip_review' %}" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+                <i class="fa-solid fa-star"></i> Read Reviews
+            </a>
+            <a href="{% url 'booking' package.slug %}" class="px-5 py-2.5 bg-gradient-to-r from-brand-500 to-emerald-500 text-white text-xs font-bold rounded-lg shadow-md hover:from-brand-600 hover:to-emerald-600 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-check"></i> Book This Package
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Body -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+        <!-- Left: Description, Itinerary, Inclusions -->
+        <div class="lg:col-span-2 space-y-10">
+
+            <!-- Description -->
+            <div>
+                <h2 class="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-brand-600"></i> About this Package
+                </h2>
+                <p class="text-sm text-slate-700 leading-relaxed">{{ package.description }}</p>
+            </div>
+
+            <!-- Highlights -->
+            {% if package.highlights %}
+            <div>
+                <h2 class="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-sparkles text-amber-500"></i> Highlights
+                </h2>
+                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-700">
+                    {% for highlight in package.highlights %}
+                    <li class="flex items-start gap-2">
+                        <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                        <span>{{ highlight }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Itinerary Summary -->
+            {% if package.itinerary_summary %}
+            <div>
+                <h2 class="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-route text-indigo-500"></i> Itinerary Snapshot
+                </h2>
+                <div class="space-y-2">
+                    {% for day in package.itinerary_summary %}
+                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-xs font-black shrink-0">
+                            {{ forloop.counter }}
+                        </span>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900">{% if day.theme %}{{ day.theme }}{% elif day.activity %}{{ day.activity }}{% endif %}</h4>
+                            <p class="text-xs text-slate-600">{% if day.description %}{{ day.description }}{% elif day.location %}{{ day.location }}{% endif %}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Inclusions & Exclusions -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Inclusions
+                    </h2>
+                    <ul class="space-y-1.5 text-sm text-slate-700">
+                        {% for inc in package.inclusions %}
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                            <span>{{ inc }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="text-slate-400 text-xs">Contact us for detailed inclusions.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-xmark text-rose-500"></i> Exclusions
+                    </h2>
+                    <ul class="space-y-1.5 text-sm text-slate-700">
+                        {% for exc in package.exclusions %}
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                            <span>{{ exc }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="text-slate-400 text-xs">No specific exclusions listed.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Crime intel + Verified Hotels -->
+        <aside class="space-y-6">
+            <!-- Crime Data Snapshot -->
+            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-chart-line text-emerald-500"></i> Destination Crime Snapshot
+                </h3>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="p-2 rounded-lg bg-slate-50">
+                        <span class="text-slate-400 block text-[9px] uppercase font-bold">Theft</span>
+                        <span class="font-black text-slate-800">{{ package.destination.theft_reports }}</span>
+                    </div>
+                    <div class="p-2 rounded-lg bg-slate-50">
+                        <span class="text-slate-400 block text-[9px] uppercase font-bold">Harass.</span>
+                        <span class="font-black text-slate-800">{{ package.destination.harassment_reports }}</span>
+                    </div>
+                    <div class="p-2 rounded-lg bg-slate-50">
+                        <span class="text-slate-400 block text-[9px] uppercase font-bold">Violent</span>
+                        <span class="font-black text-slate-800">{{ package.destination.violent_crime_reports }}</span>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-600 flex items-center justify-between">
+                    <span>Crime Trend: {{ package.destination.crime_trend_icon }} {{ package.destination.crime_trend }}</span>
+                    <span>Source: {{ package.destination.get_crime_data_source_display }}</span>
+                </div>
+                <a href="{% url 'safety_intelligence_dest' package.destination.name %}" class="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition">
+                    View Full Crime Data
+                </a>
+            </div>
+
+            <!-- Verified Hotels -->
+            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-hotel text-indigo-500"></i> Verified Stays in {{ package.destination.name }}
+                </h3>
+                <div class="space-y-2">
+                    {% for hotel in verified_hotels %}
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                        <p class="text-xs font-bold text-slate-900">{{ hotel.name }}</p>
+                        <span class="text-[10px] text-slate-500">⭐ {{ hotel.rating }} • {{ hotel.price_range }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-slate-400">No verified hotels yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</section>
+
+<!-- Post-Trip Reviews for this destination -->
+{% if post_trip_reviews %}
+<section class="bg-slate-50 py-12 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+            <i class="fa-solid fa-comments text-amber-500"></i> Traveler Reviews for {{ package.destination.name }}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for r in post_trip_reviews %}
+            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-amber-400 text-white flex items-center justify-center font-bold text-xs">
+                        {{ r.reviewer_name|first|upper }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-900">{{ r.reviewer_name }}</p>
+                        <p class="text-[10px] text-slate-400">{{ r.traveler_type }} • {{ r.created_at|date:"M Y" }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 mb-2">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= r.overall_rating %}
+                            <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                        {% else %}
+                            <i class="fa-regular fa-star text-slate-300 text-xs"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="text-[10px] text-slate-400 ml-1">Overall: {{ r.overall_rating }}/5</span>
+                </div>
+                <h3 class="text-sm font-black text-slate-900 mb-1">{{ r.title }}</h3>
+                <p class="text-xs text-slate-600 leading-relaxed line-clamp-3">{{ r.detailed_notes }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Related Packages -->
+{% if related_packages %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h2 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+        <i class="fa-solid fa-suitcase-rolling text-indigo-500"></i> More Packages in {{ package.destination.name }}
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for rel in related_packages %}
+        <a href="{% url 'package_detail' rel.slug %}" class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100 hover:shadow-xl hover:border-brand-300 transition group flex flex-col">
+            <div class="relative h-40 w-full overflow-hidden bg-slate-200">
+                <img src="{{ rel.image_url|default:'https://via.placeholder.com/600x400' }}" alt="{{ rel.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+            </div>
+            <div class="p-4 flex-1 flex flex-col">
+                <h3 class="text-sm font-black text-slate-900 leading-tight mb-1 group-hover:text-brand-700 transition">{{ rel.title }}</h3>
+                <p class="text-xs text-slate-500 line-clamp-2 mb-3">{{ rel.subtitle }}</p>
+                <div class="flex items-center justify-between mt-auto">
+                    <span class="text-base font-black text-brand-700">₹{{ rel.price|floatformat:"0" }}</span>
+                    <span class="text-[10px] text-slate-500">⭐ {{ rel.rating }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

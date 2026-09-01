@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile – YATRALENS{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="relative bg-gradient-to-r from-brand-800 via-brand-700 to-teal-600 text-white">
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px); background-size: 24px 24px;"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-6">
+            <div class="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur border border-white/30 flex items-center justify-center text-3xl font-black shadow-xl">
+                {{ initials }}
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-400/20 border border-emerald-300/40 text-emerald-100 text-[10px] font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-circle-check mr-1"></i>Verified Traveler
+                    </span>
+                    {% if user.is_staff %}<span class="px-2.5 py-0.5 rounded-full bg-indigo-400/20 border border-indigo-300/40 text-indigo-100 text-[10px] font-bold uppercase tracking-wider">Admin</span>{% endif %}
+                </div>
+                <h1 class="text-3xl font-black mt-1.5">{{ display_name }}</h1>
+                <p class="text-sm text-brand-100 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span><i class="fa-solid fa-at mr-1"></i>{{ profile_user.username }}</span>
+                    {% if profile_user.email %}<span><i class="fa-solid fa-envelope mr-1"></i>{{ profile_user.email }}</span>{% endif %}
+                    {% if profile.phone %}<span><i class="fa-solid fa-phone mr-1"></i>{{ profile.phone }}</span>{% endif %}
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'memory_maker' %}" class="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-camera-retro"></i>
+                    <span>New Travel Story</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    
+    <!-- Row: Emergency Contact + Travel Preferences -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Trusted Contacts -->
+        <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase text-rose-600"><i class="fa-solid fa-shield-halved mr-1"></i>Rapid SOS List</span>
+                    <h3 class="text-lg font-black text-slate-900 mt-0.5">Trusted Emergency Contact</h3>
+                </div>
+            </div>
+
+            {% if profile.emergency_contact_name or profile.emergency_contact_phone %}
+            <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold shrink-0">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-black text-slate-900 text-sm">{{ profile.emergency_contact_name }}</h4>
+                    <p class="text-[11px] text-slate-500">{{ profile.emergency_contact_phone }}</p>
+                </div>
+                <span class="text-[10px] px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full">🟢 Linked</span>
+            </div>
+            {% else %}
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-500">
+                No emergency contact set yet. You added none during registration.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Travel Safety Profile -->
+        <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4">
+            <div>
+                <span class="text-xs font-bold uppercase text-teal-600">Preferences & Safeguards</span>
+                <h3 class="text-lg font-black text-slate-900 mt-0.5">Travel Safety Profile</h3>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-slate-400 text-[10px] font-bold uppercase block">Travel Style</span>
+                    <span class="font-bold text-slate-900">{% if profile %}{{ profile.get_travel_style_display }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-slate-400 text-[10px] font-bold uppercase block">Location</span>
+                    <span class="font-bold text-slate-900">{% if profile.city %}{{ profile.city }}{% if profile.state %}, {{ profile.state }}{% endif %}{% else %}—{% endif %}</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-slate-400 text-[10px] font-bold uppercase block">Interests</span>
+                    <span class="font-bold text-slate-900 truncate">{% if profile.interests %}{{ profile.interests }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-slate-400 text-[10px] font-bold uppercase block">Member Since</span>
+                    <span class="font-bold text-slate-900">{{ profile_user.date_joined|date:"M Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase text-brand-600"><i class="fa-solid fa-receipt mr-1"></i>Bookings</span>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">My Package Bookings</h3>
+            </div>
+            <a href="{% url 'booking_history' %}" class="text-xs font-bold text-teal-600 hover:text-teal-700">View all →</a>
+        </div>
+
+        {% if bookings %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for b in bookings %}
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-black text-slate-900">{{ b.package.title|truncatechars:30 }}</span>
+                    <span class="text-[10px] px-2.5 py-1 rounded-full font-extrabold uppercase tracking-wider {% if b.status == 'Paid' %}bg-emerald-100 text-emerald-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ b.get_status_display }}</span>
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                    <span>{{ b.package.destination.name }} • {{ b.num_travelers }} traveler{{ b.num_travelers|pluralize }}</span>
+                    <span class="font-black text-brand-700">₹{{ b.total_amount|floatformat:"0" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-6 bg-slate-50 rounded-2xl">
+            <p class="text-sm text-slate-500">You have no bookings yet.</p>
+            <a href="{% url 'tourism_packages' %}" class="mt-2 inline-block text-xs font-bold text-brand-700 hover:underline">Explore packages →</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Saved Travel Stories -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase text-amber-600"><i class="fa-solid fa-camera-retro mr-1"></i>My Preserved Journeys</span>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">Digital Travel Stories</h3>
+            </div>
+            <a href="{% url 'memory_maker' %}" class="text-xs font-bold text-teal-600 hover:text-teal-700">Open Studio →</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for m in memories %}
+            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:shadow-lg transition space-y-3 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">{{ m.destination }}</span>
+                        <span class="text-[10px] text-slate-400">{{ m.created_at|date:"d M Y" }}</span>
+                    </div>
+                    <h4 class="font-black text-slate-900 text-sm serif-font">{{ m.title }}</h4>
+                    <p class="text-xs text-slate-600 line-clamp-3 mt-2 italic">"{{ m.favorite_moment }}"</p>
+                </div>
+                <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
+                    <a href="{% url 'memory_detail' m.id %}" class="text-xs font-bold text-teal-700 hover:underline">Read Story</a>
+                    <a href="{% url 'export_memory_pdf' m.id %}" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-file-pdf text-[10px]"></i> PDF
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-sm text-slate-500 lg:col-span-3">No travel stories yet. Create your first memory!</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
