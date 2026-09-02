@@ -7,23 +7,22 @@
     <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
 
         <!-- Success Animation -->
-        <div class="relative inline-block">
+        <div class="relative inline-block reveal-scale">
             <div class="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto animate-pulse">
-                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
                     <i class="fa-solid fa-check text-4xl"></i>
                 </div>
             </div>
-            <!-- Confetti dots -->
             <span class="absolute -top-1 -left-2 text-emerald-400 animate-bounce">●</span>
-            <span class="absolute top-6 -right-3 text-amber-400 animate-bounce delay-150">●</span>
-            <span class="absolute -bottom-1 left-0 text-indigo-400 animate-bounce delay-300">●</span>
+            <span class="absolute top-6 -right-3 text-amber-400 animate-bounce" style="animation-delay: 0.15s;">●</span>
+            <span class="absolute -bottom-1 left-0 text-indigo-400 animate-bounce" style="animation-delay: 0.3s;">●</span>
         </div>
 
-        <h1 class="mt-6 text-3xl font-black text-slate-900">Payment Successful!</h1>
-        <p class="mt-2 text-sm text-slate-600">Your package has been booked. A confirmation has been recorded for your account.</p>
+        <h1 class="mt-6 text-3xl font-black text-slate-900 reveal stagger-1">Payment Successful!</h1>
+        <p class="mt-2 text-sm text-slate-600 reveal stagger-2">Your package has been booked. A confirmation has been recorded for your account.</p>
 
         <!-- Confirmation Card -->
-        <div class="mt-8 bg-white rounded-3xl shadow-xl border border-slate-200 p-7 text-left space-y-5">
+        <div class="mt-8 bg-white rounded-3xl shadow-xl border border-slate-200 p-7 text-left space-y-5 reveal stagger-3">
             <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
                 <div class="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
                     <i class="fa-solid fa-ticket"></i>
@@ -35,19 +34,19 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div class="p-4 bg-slate-50 rounded-xl">
+                <div class="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200">
                     <p class="text-[10px] uppercase font-bold text-slate-400">Package</p>
                     <p class="font-bold text-slate-900 mt-0.5">{{ booking.package.title }}</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
+                <div class="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200">
                     <p class="text-[10px] uppercase font-bold text-slate-400">Destination</p>
                     <p class="font-bold text-slate-900 mt-0.5">{{ booking.package.destination.name }}, {{ booking.package.destination.state }}</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
+                <div class="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200">
                     <p class="text-[10px] uppercase font-bold text-slate-400">Travelers</p>
                     <p class="font-bold text-slate-900 mt-0.5">{{ booking.num_travelers }}</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-xl">
+                <div class="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200">
                     <p class="text-[10px] uppercase font-bold text-slate-400">Amount Paid</p>
                     <p class="font-bold text-brand-700 text-lg mt-0.5">₹{{ booking.total_amount|floatformat:"0" }}</p>
                 </div>
@@ -59,11 +58,14 @@
             </div>
         </div>
 
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="{% url 'booking_history' %}" class="px-6 py-3 bg-brand-700 text-white rounded-xl font-bold shadow-md hover:bg-brand-800 transition w-full sm:w-auto">
-                <i class="fa-solid fa-receipt mr-2"></i> View My Bookings
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 reveal stagger-4">
+            <a href="{% url 'ticket_pdf' booking.booking_ref %}" class="px-6 py-3 bg-gradient-to-r from-teal-600 to-emerald-500 text-white rounded-xl font-bold shadow-md hover:opacity-95 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-105 w-full sm:w-auto flex items-center justify-center gap-2">
+                <i class="fa-solid fa-file-pdf"></i> Download Ticket (PDF)
             </a>
-            <a href="{% url 'index' %}" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition w-full sm:w-auto">
+            <a href="{% url 'booking_history' %}" class="px-6 py-3 bg-brand-700 text-white rounded-xl font-bold shadow-md hover:bg-brand-800 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/25 hover:scale-105 w-full sm:w-auto flex items-center justify-center gap-2">
+                <i class="fa-solid fa-receipt"></i> View My Bookings
+            </a>
+            <a href="{% url 'index' %}" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all duration-300 hover:scale-105 w-full sm:w-auto flex items-center justify-center gap-2">
                 Back to Home
             </a>
         </div>

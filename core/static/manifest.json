@@ -1,0 +1,57 @@
+{
+  "name": "YATRALENS — Intelligent Tourism & Safety Companion",
+  "short_name": "YATRALENS",
+  "description": "Discover India, Plan Safely, and Remember Forever with 24/7 ERSS 112 SOS, Offline Emergency Maps, and Curated Packages.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#042f2e",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "/static/images/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency SOS",
+      "short_name": "SOS",
+      "description": "Instantly open the 24/7 ERSS 112 SOS Beacon",
+      "url": "/emergency/?sos=1",
+      "icons": [{ "src": "/static/images/pwa-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Emergency Map",
+      "short_name": "Map",
+      "description": "View Police, Hospitals & 24/7 First Responders",
+      "url": "/emergency/",
+      "icons": [{ "src": "/static/images/pwa-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Explore Packages",
+      "short_name": "Packages",
+      "description": "Browse curated India travel packages",
+      "url": "/packages/",
+      "icons": [{ "src": "/static/images/pwa-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Offline Emergency Hub",
+      "short_name": "Offline Hub",
+      "description": "Access emergency numbers and first aid when offline",
+      "url": "/offline/",
+      "icons": [{ "src": "/static/images/pwa-icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["travel", "navigation", "safety", "utilities"],
+  "lang": "en-IN"
+}

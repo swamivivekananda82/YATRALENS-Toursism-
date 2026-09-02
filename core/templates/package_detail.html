@@ -4,31 +4,32 @@
 
 {% block content %}
 <!-- Hero -->
-<section class="relative bg-slate-900 text-white">
+<section class="relative bg-slate-900 text-white overflow-hidden">
     <div class="absolute inset-0">
         <img src="{{ package.image_url|default:package.destination.image_url }}" alt="{{ package.title }}"
-             class="w-full h-full object-cover opacity-50" />
+             class="w-full h-full object-cover opacity-50 scale-105" style="animation: slowZoom 20s ease-in-out infinite alternate;" />
         <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
     </div>
+    <style>@keyframes slowZoom { from { transform: scale(1); } to { transform: scale(1.08); } }</style>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <a href="{% url 'tourism_packages' %}" class="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:text-white mb-4">
-            <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to all packages
+        <a href="{% url 'tourism_packages' %}" class="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:text-white mb-4 transition-colors duration-200 reveal">
+            <i class="fa-solid fa-arrow-left text-[10px] hover:-translate-x-1 transition-transform"></i> Back to all packages
         </a>
-        <div class="max-w-3xl space-y-4">
+        <div class="max-w-3xl space-y-4 reveal stagger-1">
             <div class="flex flex-wrap items-center gap-2">
-                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-indigo-500/90 text-white">
+                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-indigo-500/90 text-white shadow-sm">
                     {{ package.get_package_type_display }}
                 </span>
-                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/90 text-white">
+                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/90 text-white shadow-sm">
                     <i class="fa-solid fa-shield-halved"></i> Safety Score: {{ package.destination.safety_score }}/100
                 </span>
-                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-amber-500/90 text-white">
+                <span class="px-3 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider bg-amber-500/90 text-white shadow-sm">
                     <i class="fa-solid fa-star"></i> {{ package.rating }} ({{ package.review_count }} reviews)
                 </span>
             </div>
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">{{ package.title }}</h1>
-            <p class="text-base sm:text-lg text-slate-200">{{ package.subtitle|default:package.description|truncatechars:160 }}</p>
-            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-200 pt-2">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight reveal stagger-2">{{ package.title }}</h1>
+            <p class="text-base sm:text-lg text-slate-200 reveal stagger-3">{{ package.subtitle|default:package.description|truncatechars:160 }}</p>
+            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-200 pt-2 reveal stagger-4">
                 <span><i class="fa-solid fa-location-dot text-brand-300"></i> {{ package.destination.name }}, {{ package.destination.state }}</span>
                 <span><i class="fa-solid fa-clock text-brand-300"></i> {{ package.duration_days }} Day{{ package.duration_days|pluralize }}</span>
                 <span><i class="fa-solid fa-users text-brand-300"></i> Group of {{ package.max_group_size }}</span>
@@ -39,20 +40,20 @@
 </section>
 
 <!-- Sticky Booking Bar -->
-<div class="sticky top-16 z-30 bg-white border-b border-slate-200 shadow-sm">
+<div class="sticky top-16 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-200/60 shadow-sm transition-shadow duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div>
             <span class="text-2xl sm:text-3xl font-black text-brand-700">₹{{ package.price|floatformat:"0" }}</span>
             <span class="text-xs text-slate-400">/ person • {{ package.duration_days }} Day{{ package.duration_days|pluralize }}</span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a href="{% url 'safety_intelligence_dest' package.destination.name %}" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+            <a href="{% url 'safety_intelligence_dest' package.destination.name %}" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105">
                 <i class="fa-solid fa-shield-halved"></i> View Crime Intel
             </a>
-            <a href="{% url 'post_trip_review' %}" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+            <a href="{% url 'post_trip_review' %}" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-lg transition-all duration-200 flex items-center gap-1.5 hover:scale-105">
                 <i class="fa-solid fa-star"></i> Read Reviews
             </a>
-            <a href="{% url 'booking' package.slug %}" class="px-5 py-2.5 bg-gradient-to-r from-brand-500 to-emerald-500 text-white text-xs font-bold rounded-lg shadow-md hover:from-brand-600 hover:to-emerald-600 transition flex items-center gap-1.5">
+            <a href="{% url 'booking' package.slug %}" class="px-5 py-2.5 bg-gradient-to-r from-brand-500 to-emerald-500 text-white text-xs font-bold rounded-lg shadow-md hover:from-brand-600 hover:to-emerald-600 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/25 hover:scale-105 flex items-center gap-1.5">
                 <i class="fa-solid fa-calendar-check"></i> Book This Package
             </a>
         </div>
@@ -151,7 +152,7 @@
         <!-- Right: Crime intel + Verified Hotels -->
         <aside class="space-y-6">
             <!-- Crime Data Snapshot -->
-            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100 hover-lift reveal">
                 <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
                     <i class="fa-solid fa-chart-line text-emerald-500"></i> Destination Crime Snapshot
                 </h3>
@@ -179,7 +180,7 @@
             </div>
 
             <!-- Verified Hotels -->
-            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100 hover-lift reveal stagger-1">
                 <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
                     <i class="fa-solid fa-hotel text-indigo-500"></i> Verified Stays in {{ package.destination.name }}
                 </h3>
@@ -202,12 +203,12 @@
 {% if post_trip_reviews %}
 <section class="bg-slate-50 py-12 border-y border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+        <h2 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2 reveal">
             <i class="fa-solid fa-comments text-amber-500"></i> Traveler Reviews for {{ package.destination.name }}
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for r in post_trip_reviews %}
-            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition">
+            <div class="bg-white rounded-2xl p-5 shadow-md border border-slate-100 hover-lift reveal stagger-{{ forloop.counter }}">
                 <div class="flex items-center gap-2 mb-2">
                     <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-amber-400 text-white flex items-center justify-center font-bold text-xs">
                         {{ r.reviewer_name|first|upper }}
@@ -239,14 +240,14 @@
 <!-- Related Packages -->
 {% if related_packages %}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h2 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+    <h2 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2 reveal">
         <i class="fa-solid fa-suitcase-rolling text-indigo-500"></i> More Packages in {{ package.destination.name }}
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         {% for rel in related_packages %}
-        <a href="{% url 'package_detail' rel.slug %}" class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100 hover:shadow-xl hover:border-brand-300 transition group flex flex-col">
+        <a href="{% url 'package_detail' rel.slug %}" class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100 hover-lift group flex flex-col reveal stagger-{{ forloop.counter }}">
             <div class="relative h-40 w-full overflow-hidden bg-slate-200">
-                <img src="{{ rel.image_url|default:'https://via.placeholder.com/600x400' }}" alt="{{ rel.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="{{ rel.image_url|default:'https://via.placeholder.com/600x400' }}" alt="{{ rel.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
             </div>
             <div class="p-4 flex-1 flex flex-col">
                 <h3 class="text-sm font-black text-slate-900 leading-tight mb-1 group-hover:text-brand-700 transition">{{ rel.title }}</h3>

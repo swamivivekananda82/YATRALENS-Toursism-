@@ -6,18 +6,18 @@
 <!-- Hero Banner -->
 <section class="relative bg-gradient-to-br from-indigo-900 via-brand-900 to-slate-900 text-white py-14 overflow-hidden">
     <div class="absolute inset-0 opacity-20 pointer-events-none">
-        <div class="absolute -top-32 -right-32 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500 rounded-full blur-3xl"></div>
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-indigo-500 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500 rounded-full blur-3xl animate-float" style="animation-delay: 1.5s;"></div>
     </div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold text-indigo-200">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold text-indigo-200 reveal stagger-1">
             <i class="fa-solid fa-suitcase-rolling"></i>
             <span>YATRALENS Curated Packages</span>
         </span>
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black reveal stagger-2">
             Explore India, One Package at a Time
         </h1>
-        <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
+        <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto reveal stagger-3">
             Hand-picked weekend getaways, adventure escapes, cultural immersions, and luxury retreats —
             every package includes verified safe stays and curated itineraries.
         </p>
@@ -104,16 +104,17 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {% for pkg in packages %}
-                <a href="{% url 'package_detail' pkg.slug %}" class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 hover:shadow-2xl hover:border-brand-300 transition group flex flex-col">
+                <a href="{% url 'package_detail' pkg.slug %}" class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/80 hover-lift group flex flex-col reveal stagger-{{ forloop.counter }}">
                     <div class="relative h-48 w-full overflow-hidden bg-slate-200">
                         <img src="{{ pkg.image_url|default:'https://via.placeholder.com/600x400' }}" alt="{{ pkg.title }}"
-                             class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         <div class="absolute top-3 left-3">
-                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-white/90 text-slate-800">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-white/90 text-slate-800 shadow-sm">
                                 {{ pkg.get_package_type_display }}
                             </span>
                         </div>
-                        <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-amber-500/95 px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white">
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-amber-500/95 px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white shadow-sm">
                             <i class="fa-solid fa-star text-[10px]"></i> {{ pkg.rating }}
                         </div>
                     </div>

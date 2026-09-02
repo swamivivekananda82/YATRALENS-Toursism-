@@ -1,221 +1,285 @@
 {% extends 'base.html' %}
 
-{% block title %}Tourist Memory Maker & AI Travel Story Generator – SafeTrip Memories{% endblock %}
+{% block title %}Tourist Memory Maker & Travel Story Generator | YATRALENS{% endblock %}
 
 {% block content %}
-<div class="bg-gradient-to-r from-amber-900 via-stone-900 to-teal-950 text-white py-10 border-b border-amber-800">
+<!-- Hero Header -->
+<div class="bg-gradient-to-r from-amber-950 via-slate-900 to-teal-950 text-white py-10 border-b border-amber-800/40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-3xl">
-            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                <i class="fa-solid fa-camera-retro mr-1"></i> Automated Digital Travel Storybook
-            </span>
-            <h1 class="text-3xl sm:text-4xl font-black tracking-tight mt-1">
-                Tourist Memory Maker & AI Storyteller 📸
+        <div class="max-w-3xl space-y-2">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-camera-retro"></i> Digital Memory Studio
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight">
+                Tourist Memory Maker &amp; Travel Storybook 📸
             </h1>
-            <p class="text-xs sm:text-sm text-amber-100 mt-1">
-                Don't just keep photos in your phone gallery. SafeTrip Memories synthesizes your visited places, local food, timelines, and enriched historical trivia into an evocative digital travel album with instant PDF export.
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Turn every journey into a beautifully preserved digital travel memory. Enter the places you explored, local delicacies you savored, and your highlight moment — then synthesize an AI narrative, save to your profile, or download a printable PDF album.
             </p>
         </div>
     </div>
 </div>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-    
-    <!-- Multi-Step Memory Builder Form -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 space-y-8">
-        <div>
-            <span class="text-xs font-bold uppercase text-amber-600">Step-by-Step Journal Synthesizer</span>
-            <h2 class="text-2xl font-black text-slate-900 mt-0.5">Compose Your Travel Journey</h2>
+
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="rounded-2xl px-4 py-3 text-xs font-semibold {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Multi-Step Memory Composer Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/90 space-y-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div>
+                <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Step 1 • Journal Details</span>
+                <h2 class="text-2xl font-black text-slate-900 mt-0.5">Compose Your Travel Journey</h2>
+            </div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'profile' %}" class="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1">
+                    <i class="fa-solid fa-user"></i> View My Saved Stories in Profile →
+                </a>
+            {% endif %}
         </div>
 
-        <form id="memoryBuilderForm" onsubmit="generateStory(event)" class="space-y-6">
-            
-            <!-- Basic Details -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <form method="post" action="{% url 'memory_maker' %}" id="memoryForm" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Row 1: Destination, Traveler Name, Date, Traveler Style -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Destination</label>
-                    <input type="text" id="memoryDestination" value="Rajahmundry" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Destination *</label>
+                    <div class="space-y-1.5">
+                        <select id="destinationSelect" onchange="onDestinationChange(this.value)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            {% for dest in destinations %}
+                                <option value="{{ dest.name }}">{{ dest.name }} ({{ dest.state }})</option>
+                            {% endfor %}
+                            <option value="__custom__">+ Enter Other / Custom Destination</option>
+                        </select>
+                        <input type="text" id="customDestinationInput" name="destination" value="Rajahmundry" placeholder="Type destination name..." class="hidden w-full px-3.5 py-2 bg-white border border-amber-400 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Story Title *</label>
+                    <input type="text" id="storyTitle" name="title" required value="🌅 My Unforgettable Day in Rajahmundry" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Traveler Name *</label>
+                    <input type="text" id="travelerName" name="traveler_name" required value="{{ request.user.get_full_name|default:request.user.username|default:'Aarohi Reddy' }}" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Travel Date</label>
+                    <input type="date" id="travelDate" name="travel_date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+            </div>
+
+            <!-- Traveler Style -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Traveler Style / Group Type</label>
+                    <select id="travelerType" name="traveler_type" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 bg-white">
+                        <option value="Solo Woman Traveler">Solo Woman Traveler 👩</option>
+                        <option value="Solo Man Traveler">Solo Man Traveler 🎒</option>
+                        <option value="Couple Traveler">Couple Getaway 💑</option>
+                        <option value="Family Group">Family Vacation 👨‍👩‍👧‍👦</option>
+                        <option value="Friends Group">Friends Gang 🌴</option>
+                    </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Traveler Name</label>
-                    <input type="text" id="travelerName" value="Aarohi Reddy" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Story Title</label>
-                    <input type="text" id="storyTitle" value="🌅 My Day in Rajahmundry" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Cover Photo / Scenic URL (Optional)</label>
+                    <input type="url" id="photoUrlInput" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1627894006066-b4578896085a?auto=format&fit=crop&w=800&q=80" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
                 </div>
             </div>
 
-            <!-- Visited Places Multi-Select -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-2">
-                    📍 Places Visited (Click to Select / Tag):
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {% for att in attractions %}
-                    <label class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-amber-50/60 transition select-none">
-                        <input type="checkbox" name="visitedPlaces" value="{{ att.name }}" checked class="accent-amber-600 w-4 h-4" />
-                        <div class="text-xs">
-                            <span class="font-bold text-slate-900 block">{{ att.name }}</span>
-                            <span class="text-[10px] text-slate-500">{{ att.category }}</span>
-                        </div>
+            <!-- Visited Places with Interactive Tag Adder -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-700 uppercase">
+                        📍 Visited Places &amp; Attractions (Select or Add Any):
                     </label>
-                    {% endfor %}
+                    <span class="text-[10px] text-slate-400">Click a tag to toggle</span>
+                </div>
+
+                <!-- Active Places Container -->
+                <div id="placesContainer" class="flex flex-wrap gap-2">
+                    <span class="place-tag px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-check text-amber-700"></i> Godavari Pushkar Ghat
+                        <input type="hidden" name="visited_places" value="Godavari Pushkar Ghat" />
+                    </span>
+                    <span class="place-tag px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-check text-amber-700"></i> Dowleswaram Barrage
+                        <input type="hidden" name="visited_places" value="Dowleswaram Barrage" />
+                    </span>
+                    <span class="place-tag px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-check text-amber-700"></i> Markandeyeshwara Temple
+                        <input type="hidden" name="visited_places" value="Markandeyeshwara Temple" />
+                    </span>
+                </div>
+
+                <!-- Custom Place Adder Input -->
+                <div class="flex items-center gap-2 max-w-md pt-1">
+                    <input type="text" id="newPlaceInput" placeholder="Add custom spot (e.g. Riverfront Park, Sunset Point)..."
+                        class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    <button type="button" onclick="addCustomPlace()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0">
+                        <i class="fa-solid fa-plus"></i> Add Place
+                    </button>
                 </div>
             </div>
 
-            <!-- Food Tried Multi-Select & Input -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-2">
-                    🍛 Food & Delicacies Tasted:
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <label class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-amber-50/60 transition select-none">
-                        <input type="checkbox" name="foodTried" value="Authentic Andhra Meals with Gongura Pachadi" checked class="accent-amber-600 w-4 h-4" />
-                        <div class="text-xs">
-                            <span class="font-bold text-slate-900 block">Andhra Thali & Gongura</span>
-                            <span class="text-[10px] text-slate-500">Spicy, Tangy Vegetarian Meal</span>
-                        </div>
+            <!-- Food & Delicacies Tasted with Interactive Tag Adder -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-700 uppercase">
+                        🍛 Food &amp; Delicacies Tasted (Select or Add Any):
                     </label>
-                    <label class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-amber-50/60 transition select-none">
-                        <input type="checkbox" name="foodTried" value="Atreyapuram Pure Ghee Pootharekulu" checked class="accent-amber-600 w-4 h-4" />
-                        <div class="text-xs">
-                            <span class="font-bold text-slate-900 block">Atreyapuram Pootharekulu</span>
-                            <span class="text-[10px] text-slate-500">Traditional Paper Sweet</span>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-amber-50/60 transition select-none">
-                        <input type="checkbox" name="foodTried" value="Godavari Fresh Filter Coffee & Mirchi Bajji" checked class="accent-amber-600 w-4 h-4" />
-                        <div class="text-xs">
-                            <span class="font-bold text-slate-900 block">Filter Coffee & Hot Snacks</span>
-                            <span class="text-[10px] text-slate-500">Riverside Evening Treat</span>
-                        </div>
-                    </label>
+                    <span class="text-[10px] text-slate-400">Click a tag to toggle</span>
+                </div>
+
+                <!-- Active Foods Container -->
+                <div id="foodsContainer" class="flex flex-wrap gap-2">
+                    <span class="food-tag px-3 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-700"></i> Authentic Andhra Meals
+                        <input type="hidden" name="food_tried" value="Authentic Andhra Meals" />
+                    </span>
+                    <span class="food-tag px-3 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-700"></i> Atreyapuram Pootharekulu
+                        <input type="hidden" name="food_tried" value="Atreyapuram Pootharekulu" />
+                    </span>
+                    <span class="food-tag px-3 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-700"></i> Godavari Fresh Filter Coffee
+                        <input type="hidden" name="food_tried" value="Godavari Fresh Filter Coffee" />
+                    </span>
+                </div>
+
+                <!-- Custom Food Adder Input -->
+                <div class="flex items-center gap-2 max-w-md pt-1">
+                    <input type="text" id="newFoodInput" placeholder="Add custom delicacy (e.g. Masala Dosa, Kulfi, Biryani)..."
+                        class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    <button type="button" onclick="addCustomFood()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0">
+                        <i class="fa-solid fa-plus"></i> Add Food
+                    </button>
                 </div>
             </div>
 
-            <!-- Auto Historical Facts Enrichment Box -->
-            <div class="p-4 bg-teal-50 rounded-2xl border border-teal-200 space-y-2">
-                <span class="text-xs font-black uppercase text-teal-800 flex items-center gap-1.5">
-                    <i class="fa-solid fa-landmark"></i> Auto-Enriched Historical Facts
-                </span>
-                <p class="text-xs text-teal-900 leading-relaxed">
-                    🏛️ <b>Dowleswaram Barrage</b>: Engineered between 1847-1852 by Sir Arthur Cotton across the Godavari River, transforming the East Godavari delta into the rice bowl of Andhra Pradesh.<br/>
-                    🛕 <b>Kotilingala Pushkar Ghat</b>: Ancient holy riverfront dating to the Chalukyas, celebrated for the 12-year Godavari Pushkaram ceremonies.
-                </p>
-            </div>
-
-            <!-- Favorite Moment Tag (Crucial Requirement) -->
+            <!-- Favorite Highlight Moment -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                    ⭐ My Favorite Moment (Highlight of the Day):
+                    ⭐ My Favorite Moment (Highlight of the Journey) *
                 </label>
-                <textarea id="favoriteMoment" rows="2" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none">Watching the golden sunset over the Godavari River while standing by the historical Dowleswaram Barrage.</textarea>
+                <textarea id="favoriteMoment" name="favorite_moment" rows="2" required
+                    placeholder="Describe your absolute favorite memory, sunset view, emotional moment, or cultural encounter..."
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none">Watching the golden sunset over the Godavari River while standing by the historical Dowleswaram Barrage.</textarea>
             </div>
 
-            <!-- Generate Story Button -->
-            <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" id="synthesizeBtn" class="px-8 py-3.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs font-bold rounded-2xl shadow-lg transition flex items-center gap-2">
+            <!-- Hidden field for generated story -->
+            <input type="hidden" id="hiddenGeneratedStory" name="generated_story" value="" />
+
+            <!-- Action Buttons: Synthesize + Save -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="triggerAiSynthesizer()" id="synthesizeBtn" class="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs font-bold rounded-2xl shadow-lg transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>🤖 Synthesize AI Travel Story</span>
+                    <span>🤖 Synthesize AI Travel Narrative</span>
                 </button>
+
+                <div class="flex items-center gap-3">
+                    <button type="submit" id="saveMemoryBtn" class="px-8 py-3 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-700 hover:to-emerald-700 text-white text-xs font-black rounded-2xl shadow-xl shadow-teal-500/25 transition transform hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk text-sm"></i>
+                        <span>💾 Save Memory to My Profile</span>
+                    </button>
+                </div>
             </div>
 
         </form>
     </div>
 
-    <!-- AI Story Preview, Editor & PDF Export Studio -->
+    <!-- AI Story Preview, Live Narrative Editor & PDF Export Studio -->
     <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl border border-slate-200/80 space-y-8" id="printableAlbum">
         
-        <!-- Story Actions Header -->
+        <!-- Story Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
             <div>
                 <span class="text-xs font-bold uppercase text-teal-700 tracking-wider">🌟 Digital Travel Story Album</span>
-                <h2 class="text-3xl font-black text-slate-900 serif-font mt-1" id="albumDisplayTitle">🌄 My Day in Rajahmundry</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Author: <span class="font-bold text-slate-800" id="albumAuthor">Aarohi Reddy</span> (Solo Woman Traveler) • SafeTrip Verified</p>
+                <h2 class="text-3xl font-black text-slate-900 serif-font mt-1" id="albumDisplayTitle">🌅 My Day in Rajahmundry</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Author: <span class="font-bold text-slate-800" id="albumAuthor">{{ request.user.get_full_name|default:request.user.username|default:'Aarohi Reddy' }}</span> • Verified Traveler</p>
             </div>
 
-            <!-- PDF Download & Share Buttons -->
+            <!-- PDF Download & Share -->
             <div class="flex flex-wrap items-center gap-2">
-                <a href="/memories/1/pdf/" id="serverPdfBtn" class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md">
+                <button type="button" onclick="saveAndDownloadPdf()" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer">
                     <i class="fa-solid fa-file-pdf"></i>
                     <span>Download ReportLab PDF</span>
-                </a>
-                <button onclick="downloadClientPdf()" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md">
-                    <i class="fa-solid fa-print"></i>
-                    <span>Print / Instant PDF</span>
                 </button>
-                <button onclick="shareStoryLink()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md">
-                    <i class="fa-solid fa-share-nodes"></i>
-                    <span>Share Album</span>
+                <button type="button" onclick="downloadClientPdf()" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Print Instant PDF</span>
                 </button>
             </div>
         </div>
 
-        <!-- Editable AI Generated Story Narrative -->
-        <div class="space-y-4">
+        <!-- Editable Narrative -->
+        <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <h3 class="text-xs font-black uppercase text-slate-900 tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-feather text-amber-600"></i>
-                    <span>AI-Generated Personalized Narrative (Click to Edit)</span>
+                    <span>Travel Narrative (Live Editable — Click &amp; Type Below)</span>
                 </h3>
-                <span class="text-[10px] text-slate-400 font-semibold"><i class="fa-solid fa-pencil mr-1"></i> Live Editable</span>
+                <span class="text-[10px] text-slate-400 font-semibold"><i class="fa-solid fa-pencil mr-1"></i> Editable</span>
             </div>
 
-            <div contenteditable="true" id="storyTextContent" class="p-6 bg-amber-50/40 border border-amber-200 rounded-3xl text-sm sm:text-base text-slate-800 leading-relaxed serif-font focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <div contenteditable="true" id="storyTextContent" oninput="syncEditableStory()" class="p-6 bg-amber-50/40 border border-amber-200 rounded-3xl text-sm sm:text-base text-slate-800 leading-relaxed serif-font focus:outline-none focus:ring-2 focus:ring-amber-500">
                 My journey began along the beautiful Godavari River. I visited Dowleswaram Barrage and explored the local attractions. I enjoyed traditional Andhra food including authentic Gongura pachadi and mouth-watering Atreyapuram Pootharekulu, and captured several memorable moments throughout the day.<br/><br/>
                 Standing by the massive Dowleswaram Barrage watching the sun melt into the sacred Godavari River was my favorite moment. With real-time safety routes, verified accommodations, and responsive emergency support, I explored with pure freedom and confidence.
             </div>
         </div>
 
-        <!-- Favorite Moment Highlighted Box -->
+        <!-- Highlighted Favorite Moment Box -->
         <div class="p-6 bg-gradient-to-r from-amber-100 to-amber-50 rounded-3xl border-2 border-amber-300 shadow-sm flex items-start gap-4">
             <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 shadow-md">
                 <i class="fa-solid fa-star"></i>
             </div>
             <div>
-                <span class="text-[11px] font-black uppercase tracking-wider text-amber-900">⭐ My Favorite Moment</span>
+                <span class="text-[11px] font-black uppercase tracking-wider text-amber-900">⭐ Highlight Moment</span>
                 <p class="text-sm sm:text-base font-bold text-amber-950 mt-1 italic serif-font" id="albumFavMoment">
                     "Watching the golden sunset over the Godavari River while standing by the historical Dowleswaram Barrage."
                 </p>
             </div>
         </div>
 
-        <!-- Visited Timeline & Photos Gallery -->
+        <!-- Photo Showcase -->
         <div class="space-y-4">
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                📸 Captured Travel Gallery & Timeline
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">
+                📸 Captured Travel Gallery
             </h3>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                
-                <!-- Photo 1 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="galleryContainer">
                 <div class="bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                    <img src="https://images.unsplash.com/photo-1627894006066-b4578896085a?auto=format&fit=crop&w=800&q=80" alt="Pushkar Ghat" class="w-full h-44 object-cover" />
+                    <img id="galleryImg1" src="https://images.unsplash.com/photo-1627894006066-b4578896085a?auto=format&fit=crop&w=800&q=80" alt="Scenic Spot" class="w-full h-44 object-cover" />
                     <div class="p-3">
-                        <span class="text-[10px] text-teal-600 font-bold uppercase block">06:15 PM • Pushkar Ghat</span>
-                        <p class="text-xs font-semibold text-slate-800">Golden sunset reflections over holy Godavari river</p>
+                        <span class="text-[10px] text-teal-600 font-bold uppercase block">Scenic Highlights</span>
+                        <p class="text-xs font-semibold text-slate-800">Golden evening reflections &amp; riverside tranquility</p>
                     </div>
                 </div>
-
-                <!-- Photo 2 -->
                 <div class="bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                    <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80" alt="Dowleswaram Barrage" class="w-full h-44 object-cover" />
+                    <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80" alt="Historical Architecture" class="w-full h-44 object-cover" />
                     <div class="p-3">
-                        <span class="text-[10px] text-teal-600 font-bold uppercase block">03:45 PM • Dowleswaram</span>
-                        <p class="text-xs font-semibold text-slate-800">Sir Arthur Cotton's iconic barrage engineering marvel</p>
+                        <span class="text-[10px] text-teal-600 font-bold uppercase block">Heritage &amp; Culture</span>
+                        <p class="text-xs font-semibold text-slate-800">Iconic engineering &amp; historic architecture marvel</p>
                     </div>
                 </div>
-
-                <!-- Photo 3 -->
                 <div class="bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                    <img src="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80" alt="Markandeyeshwara Temple" class="w-full h-44 object-cover" />
+                    <img src="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80" alt="Temple & Culture" class="w-full h-44 object-cover" />
                     <div class="p-3">
-                        <span class="text-[10px] text-teal-600 font-bold uppercase block">11:20 AM • Markandeyeshwara</span>
-                        <p class="text-xs font-semibold text-slate-800">Ancient Dravidian stone architecture & tranquility</p>
+                        <span class="text-[10px] text-teal-600 font-bold uppercase block">Spiritual Serenity</span>
+                        <p class="text-xs font-semibold text-slate-800">Ancient Dravidian architecture &amp; holy river ghats</p>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -226,16 +290,86 @@
 
 {% block extra_scripts %}
 <script>
-    function generateStory(event) {
-        event.preventDefault();
-        const dest = document.getElementById('memoryDestination').value;
+    // Handle destination change
+    function onDestinationChange(val) {
+        const customInput = document.getElementById('customDestinationInput');
+        if (val === '__custom__') {
+            customInput.classList.remove('hidden');
+            customInput.value = '';
+            customInput.focus();
+        } else {
+            customInput.classList.add('hidden');
+            customInput.value = val;
+            document.getElementById('storyTitle').value = `🌅 My Day in ${val}`;
+            document.getElementById('albumDisplayTitle').innerText = `🌅 My Day in ${val}`;
+        }
+    }
+
+    // Add Custom Visited Place Tag
+    function addCustomPlace() {
+        const input = document.getElementById('newPlaceInput');
+        const val = input.value.trim();
+        if (!val) return;
+
+        const container = document.getElementById('placesContainer');
+        const span = document.createElement('span');
+        span.className = 'place-tag px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm';
+        span.innerHTML = `<i class="fa-solid fa-circle-check text-amber-700"></i> ${val} <input type="hidden" name="visited_places" value="${val}" />`;
+        
+        span.onclick = function() {
+            span.remove();
+        };
+
+        container.appendChild(span);
+        input.value = '';
+        showToast(`Added place: ${val}`, 'success');
+    }
+
+    // Add Custom Food Tag
+    function addCustomFood() {
+        const input = document.getElementById('newFoodInput');
+        const val = input.value.trim();
+        if (!val) return;
+
+        const container = document.getElementById('foodsContainer');
+        const span = document.createElement('span');
+        span.className = 'food-tag px-3 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm';
+        span.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-700"></i> ${val} <input type="hidden" name="food_tried" value="${val}" />`;
+        
+        span.onclick = function() {
+            span.remove();
+        };
+
+        container.appendChild(span);
+        input.value = '';
+        showToast(`Added delicacy: ${val}`, 'success');
+    }
+
+    // Allow clicking existing tags to toggle / remove
+    document.querySelectorAll('.place-tag, .food-tag').forEach(tag => {
+        tag.title = 'Click to remove';
+        tag.addEventListener('click', function() {
+            if (confirm(`Remove "${this.textContent.trim()}"?`)) {
+                this.remove();
+            }
+        });
+    });
+
+    // Sync contenteditable story to hidden input
+    function syncEditableStory() {
+        const content = document.getElementById('storyTextContent').innerText;
+        document.getElementById('hiddenGeneratedStory').value = content;
+    }
+
+    // AI Synthesizer trigger
+    function triggerAiSynthesizer() {
+        const dest = document.getElementById('customDestinationInput').value || document.getElementById('destinationSelect').value;
         const name = document.getElementById('travelerName').value;
         const title = document.getElementById('storyTitle').value;
         const favMoment = document.getElementById('favoriteMoment').value;
 
-        // Gather checked places
-        const places = Array.from(document.querySelectorAll('input[name="visitedPlaces"]:checked')).map(el => el.value);
-        const foods = Array.from(document.querySelectorAll('input[name="foodTried"]:checked')).map(el => el.value);
+        const places = Array.from(document.querySelectorAll('input[name="visited_places"]')).map(el => el.value);
+        const foods = Array.from(document.querySelectorAll('input[name="food_tried"]')).map(el => el.value);
 
         const btn = document.getElementById('synthesizeBtn');
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Synthesizing Story...</span>`;
@@ -255,64 +389,58 @@
         })
         .then(res => res.json())
         .then(data => {
-            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>🤖 Synthesize AI Travel Story</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>🤖 Synthesize AI Travel Narrative</span>`;
             btn.disabled = false;
 
             document.getElementById('albumDisplayTitle').innerText = title;
             document.getElementById('albumAuthor').innerText = name;
             document.getElementById('storyTextContent').innerText = data.story;
             document.getElementById('albumFavMoment').innerText = `"${favMoment}"`;
+            document.getElementById('hiddenGeneratedStory').value = data.story;
 
-            // Auto-save to backend
-            saveMemoryToDb(title, dest, name, places, foods, favMoment, data.story);
+            const photoUrl = document.getElementById('photoUrlInput').value;
+            if (photoUrl) {
+                document.getElementById('galleryImg1').src = photoUrl;
+            }
 
-            showToast('AI Travel Story generated and ready for PDF export!', 'success');
+            showToast('AI Travel Story synthesized! You can now edit it or click Save Memory.', 'success');
         })
         .catch(err => {
-            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>🤖 Synthesize AI Travel Story</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>🤖 Synthesize AI Travel Narrative</span>`;
             btn.disabled = false;
-            showToast('Story generated using local AI engine!', 'info');
+            showToast('Generated using offline story engine!', 'info');
         });
     }
 
-    function saveMemoryToDb(title, dest, name, places, foods, favMoment, story) {
-        fetch('/api/memories/save/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                destination: dest,
-                traveler_name: name,
-                places_visited: places,
-                food_tried: foods,
-                favorite_moment: favMoment,
-                generated_story: story
-            })
-        })
-        .then(res => res.json())
-        .then(saved => {
-            if (saved.id) {
-                document.getElementById('serverPdfBtn').href = `/memories/${saved.id}/pdf/`;
-            }
-        });
+    // Save and download ReportLab PDF
+    function saveAndDownloadPdf() {
+        syncEditableStory();
+        const form = document.getElementById('memoryForm');
+        // Submit the form which will redirect to profile with success
+        form.submit();
     }
 
+    // Client-side instant PDF
     function downloadClientPdf() {
         const element = document.getElementById('printableAlbum');
         const opt = {
             margin: 0.5,
-            filename: 'SafeTrip_Memories_Travel_Story.pdf',
+            filename: 'YatraLens_Travel_Story.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
         html2pdf().set(opt).from(element).save();
-        showToast('Generating and downloading PDF album...', 'info');
+        showToast('Generating instant PDF storybook...', 'info');
     }
 
-    function shareStoryLink() {
-        navigator.clipboard.writeText(window.location.href);
-        showToast('Story album link copied to clipboard!', 'success');
-    }
+    // Initial setup on load
+    document.addEventListener('DOMContentLoaded', () => {
+        syncEditableStory();
+        const dateInput = document.getElementById('travelDate');
+        if (dateInput && !dateInput.value) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+    });
 </script>
 {% endblock %}

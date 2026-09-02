@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>{% block title %}YATRALENS – Discover India. Plan Safely. Remember Forever.{% endblock %}</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d9488">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="YATRALENS">
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,11 +66,11 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
         }
         .serif-font {
             font-family: 'Playfair Display', serif;
         }
-        /* Custom map pin styles */
         .custom-pin {
             display: flex;
             align-items: center;
@@ -72,7 +80,6 @@
             font-weight: bold;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
         }
-        /* Pulse animations for SOS */
         @keyframes pulse-sos {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
@@ -85,63 +92,197 @@
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
+        /* Scroll-triggered reveal animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeLeft {
+            from { opacity: 0; transform: translateX(-40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-left.visible { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-right.visible { opacity: 1; transform: translateX(0); }
+        .reveal-scale { opacity: 0; transform: scale(0.9); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-scale.visible { opacity: 1; transform: scale(1); }
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        .stagger-4 { transition-delay: 0.4s; }
+        .stagger-5 { transition-delay: 0.5s; }
+        .stagger-6 { transition-delay: 0.6s; }
+        /* Hover lift effect for cards */
+        .hover-lift { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .hover-lift:hover { transform: translateY(-6px); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15); }
+        /* Gradient text shimmer */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .text-shimmer {
+            background: linear-gradient(90deg, #0d9488 0%, #14b8a6 25%, #5eead4 50%, #14b8a6 75%, #0d9488 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+        /* Floating animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        /* Parallax container */
+        .parallax-section { overflow: hidden; position: relative; }
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen pb-20 md:pb-0">
 
-    <!-- Top Alert Ticker (Live Broadcasts) -->
-    <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-between shadow-sm">
-        <div class="flex items-center gap-2 max-w-6xl mx-auto overflow-hidden">
-            <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold shrink-0">
-                <i class="fa-solid fa-satellite-dish mr-1 animate-pulse"></i> LIVE SAFETY ADVISORY
-            </span>
-            <marquee behavior="scroll" direction="left" class="text-xs">
-                🛡️ Rajahmundry: 24/7 Tourist Police Kiosk active at Godavari Pushkar Ghat • Safe Corridor status: 🟢 Low Risk (Score: 82/100) • National Emergency Dial 112 • Women Safety Helpline 1091
-            </marquee>
-        </div>
-        <a href="{% url 'emergency_map' %}" class="hidden md:inline-flex items-center gap-1 text-[11px] underline font-bold hover:text-amber-100 shrink-0">
-            Emergency Contacts <i class="fa-solid fa-arrow-right text-[9px]"></i>
+    <!-- Offline Connectivity Notice Banner (Dynamic) -->
+    <div id="offlineStatusBar" class="hidden bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white text-xs font-bold py-1.5 px-4 text-center items-center justify-center gap-2 shadow-sm sticky top-0 z-50">
+        <i class="fa-solid fa-plane-slash animate-pulse"></i>
+        <span>Offline Mode: Using cached emergency data.</span>
+        <a href="{% url 'offline_hub' %}" class="underline ml-2 bg-white/20 px-2 py-0.5 rounded text-[11px] font-black hover:bg-white/30">
+            Open Offline Hub &rarr;
         </a>
     </div>
 
+    <!-- PWA Install App Prompt Banner (Mobile) -->
+    <div id="pwaInstallBanner" class="hidden bg-slate-900 text-white text-xs py-2 px-4 border-b border-slate-800 flex items-center justify-between z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-teal-600 flex items-center justify-center text-xs font-black">
+                <i class="fa-solid fa-compass-drafting"></i>
+            </div>
+            <span>Install <b>YATRALENS</b> App for fast offline SOS access</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="pwaInstallBtn" class="px-3 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded-lg font-black text-[11px]">Install</button>
+            <button onclick="dismissPwaBanner()" class="text-slate-400 hover:text-white text-sm px-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
+    <!-- Top Alert Ticker -->
+    <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+        <div class="absolute inset-0 opacity-30 pointer-events-none" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); background-size: 200% 100%; animation: shimmer 4s linear infinite;"></div>
+        <div class="relative flex items-center gap-2 max-w-6xl mx-auto overflow-hidden">
+            <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold shrink-0 backdrop-blur-sm">
+                <i class="fa-solid fa-satellite-dish mr-1 animate-pulse"></i> LIVE SAFETY ADVISORY
+            </span>
+            <marquee behavior="scroll" direction="left" class="text-xs">
+                Rajahmundry: 24/7 Tourist Police Kiosk active at Godavari Pushkar Ghat • Safe Corridor status: Low Risk (Score: 82/100) • National Emergency Dial 112 • Women Safety Helpline 1091
+            </marquee>
+        </div>
+        <div class="relative flex items-center gap-3 shrink-0">
+            <button onclick="triggerIntroReplay()" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white transition-all duration-200 cursor-pointer backdrop-blur-sm">
+                <i class="fa-solid fa-film"></i> Replay Intro
+            </button>
+            <a href="{% url 'emergency_map' %}" class="hidden md:inline-flex items-center gap-1 text-[11px] underline font-bold hover:text-amber-100 transition-colors duration-200">
+                Emergency Contacts <i class="fa-solid fa-arrow-right text-[9px]"></i>
+            </a>
+        </div>
+    </div>
+
     <!-- Main Navigation Bar -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-sm transition-all duration-300" id="mainHeader">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
 
                 <!-- Brand Logo -->
-                <a href="{% url 'index' %}" class="flex items-center gap-2.5 group shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition">
+                <a href="{% url 'index' %}" class="flex items-center gap-2.5 group shrink-0 relative">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:shadow-lg group-hover:shadow-brand-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                         <i class="fa-solid fa-compass-drafting text-xl"></i>
                     </div>
                     <div class="hidden sm:block">
-                        <div class="text-xl font-black tracking-tight text-slate-900 leading-none">YATRALENS</div>
-                        <p class="text-[9px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">Discover • Plan • Remember</p>
+                        <div class="text-xl font-black tracking-tight text-slate-900 leading-none text-shimmer">YATRALENS</div>
+                        <p class="text-[9px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">Discover &bull; Plan &bull; Remember</p>
                     </div>
                 </a>
 
-                <!-- Desktop Navigation Links (xl+ to avoid crowding) -->
-                <nav class="hidden xl:flex items-center gap-0.5 text-sm font-medium text-slate-600">
-                    <a href="{% url 'index' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'home' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Home</a>
-                    <a href="{% url 'tourism_packages' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'packages' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Packages</a>
-                    <a href="{% url 'safety_intelligence' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'safety' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Safety Intel</a>
-                    <a href="{% url 'women_safety' %}" class="px-3 py-2 rounded-lg hover:text-rose-700 hover:bg-rose-50 transition {% if active_tab == 'women_safety' %}text-rose-700 bg-rose-50 font-bold{% endif %}">Women Safety</a>
-                    <a href="{% url 'verified_hotels' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'hotels' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Safe Stays</a>
-                    <a href="{% url 'memory_maker' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'memories' %}text-brand-700 bg-brand-50 font-bold{% endif %}">Memories</a>
-                    <a href="{% url 'ai_assistant' %}" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition {% if active_tab == 'ai_assistant' %}text-brand-700 bg-brand-50 font-bold{% endif %}">AI Guide</a>
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden xl:flex items-center gap-0.5 text-sm font-medium text-slate-600 relative">
+                    <a href="{% url 'index' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'home' %}text-brand-700 bg-brand-50 font-bold{% endif %}">
+                        <span class="relative z-10">Home</span>
+                        <span class="absolute inset-0 rounded-lg bg-brand-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
+                    <a href="{% url 'tourism_packages' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'packages' %}text-brand-700 bg-brand-50 font-bold{% endif %}">
+                        <span class="relative z-10">Packages</span>
+                        <span class="absolute inset-0 rounded-lg bg-brand-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
+                    <a href="{% url 'safety_intelligence' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'safety' %}text-brand-700 bg-brand-50 font-bold{% endif %}">
+                        <span class="relative z-10">Safety Intel</span>
+                        <span class="absolute inset-0 rounded-lg bg-brand-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
+                    <a href="{% url 'women_safety' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'women_safety' %}text-rose-700 bg-rose-50 font-bold{% endif %}">
+                        <span class="relative z-10">Women Safety</span>
+                        <span class="absolute inset-0 rounded-lg bg-rose-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
+                    <a href="{% url 'verified_hotels' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'hotels' %}text-brand-700 bg-brand-50 font-bold{% endif %}">
+                        <span class="relative z-10">Safe Stays</span>
+                        <span class="absolute inset-0 rounded-lg bg-brand-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
+                    <a href="{% url 'memory_maker' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'memories' %}text-brand-700 bg-brand-50 font-bold{% endif %}">
+                        <span class="relative z-10">Memories</span>
+                        <span class="absolute inset-0 rounded-lg bg-brand-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
+                    <a href="{% url 'ai_assistant' %}" class="nav-link px-3 py-2 rounded-lg transition-all duration-200 relative group {% if active_tab == 'ai_assistant' %}text-brand-700 bg-brand-50 font-bold{% endif %}">
+                        <span class="relative z-10">AI Guide</span>
+                        <span class="absolute inset-0 rounded-lg bg-brand-50 scale-0 group-hover:scale-100 transition-transform duration-200 origin-center"></span>
+                    </a>
 
-                    <!-- More dropdown: secondary pages -->
+                    <!-- More dropdown -->
                     <div class="relative ml-1" id="moreMenuWrap">
-                        <button onclick="toggleMoreMenu()" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100 transition flex items-center gap-1">
-                            More <i class="fa-solid fa-chevron-down text-[10px] mt-0.5"></i>
+                        <button onclick="toggleMoreMenu()" class="px-3 py-2 rounded-lg hover:text-brand-700 hover:bg-slate-100/80 transition-all duration-200 flex items-center gap-1 group" id="moreMenuBtn">
+                            <span>More</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] mt-0.5 transition-transform duration-200 group-hover:rotate-180" id="moreMenuChevron"></i>
                         </button>
-                        <div id="moreMenu" class="hidden absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50">
-                            <a href="{% url 'emergency_map' %}" class="block px-3 py-2 text-sm hover:bg-slate-50 {% if active_tab == 'emergency' %}text-rose-700 font-bold{% endif %}"><i class="fa-solid fa-truck-medical w-5 text-rose-500"></i> Emergency Map</a>
-                            <a href="{% url 'trip_planner' %}" class="block px-3 py-2 text-sm hover:bg-slate-50"><i class="fa-solid fa-route w-5 text-teal-600"></i> Trip Planner</a>
-                            <a href="{% url 'customer_feedback' %}" class="block px-3 py-2 text-sm hover:bg-slate-50 {% if active_tab == 'feedback' %}text-purple-700 font-bold{% endif %}"><i class="fa-solid fa-comment-dots w-5 text-purple-500"></i> Feedback</a>
-                            <a href="{% url 'post_trip_review' %}" class="block px-3 py-2 text-sm hover:bg-slate-50 {% if active_tab == 'reviews' %}text-amber-700 font-bold{% endif %}"><i class="fa-solid fa-star w-5 text-amber-500"></i> Reviews</a>
-                            <a href="{% url 'admin_dashboard' %}" class="block px-3 py-2 text-sm hover:bg-slate-50"><i class="fa-solid fa-chart-line w-5 text-indigo-600"></i> Admin Board</a>
+                        <div id="moreMenu" class="hidden absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-slate-200/50 border border-slate-100 py-2 z-50">
+                            <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">More Pages</div>
+                            <a href="{% url 'emergency_map' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 rounded-xl mx-1.5 {% if active_tab == 'emergency' %}text-rose-700 bg-rose-50 font-bold{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-truck-medical text-rose-500 text-xs"></i></span>
+                                Emergency Map
+                            </a>
+                            <a href="{% url 'trip_planner' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 rounded-xl mx-1.5">
+                                <span class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-route text-teal-600 text-xs"></i></span>
+                                Trip Planner
+                            </a>
+                            <a href="{% url 'customer_feedback' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 rounded-xl mx-1.5 {% if active_tab == 'feedback' %}text-purple-700 bg-purple-50 font-bold{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-comment-dots text-purple-500 text-xs"></i></span>
+                                Feedback
+                            </a>
+                            <a href="{% url 'post_trip_review' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 rounded-xl mx-1.5 {% if active_tab == 'reviews' %}text-amber-700 bg-amber-50 font-bold{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-star text-amber-500 text-xs"></i></span>
+                                Reviews
+                            </a>
+                            <div class="border-t border-slate-100 my-1.5"></div>
+                            <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 rounded-xl mx-1.5">
+                                <span class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-chart-line text-indigo-600 text-xs"></i></span>
+                                Admin Dashboard
+                            </a>
                         </div>
                     </div>
                 </nav>
@@ -149,66 +290,94 @@
                 <!-- Right Action Bar -->
                 <div class="flex items-center gap-2">
                     <!-- SOS Button -->
-                    <button onclick="openSosModal()" class="hidden md:inline-flex bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md shadow-red-500/30 items-center gap-1.5 transition transform active:scale-95 animate-sos-pulse shrink-0">
+                    <button onclick="openSosModal()" class="hidden md:inline-flex bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md shadow-red-500/25 hover:shadow-lg hover:shadow-red-500/40 items-center gap-1.5 transition-all duration-300 active:scale-95 animate-sos-pulse shrink-0">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span class="hidden lg:inline">EMERGENCY SOS</span>
                         <span class="lg:hidden">SOS</span>
                     </button>
 
+                    <!-- Divider -->
+                    <div class="hidden sm:block w-px h-6 bg-slate-200"></div>
+
                     <!-- Profile -->
-                    <a href="{% url 'profile' %}" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-brand-100 text-slate-700 hover:text-brand-800 flex items-center justify-center border border-slate-200 transition shrink-0" title="My Profile">
+                    <a href="{% url 'profile' %}" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-700 flex items-center justify-center border border-slate-200 hover:border-brand-300 transition-all duration-300 hover:shadow-md hover:shadow-brand-100 hover:scale-105 shrink-0" title="My Profile">
                         <i class="fa-solid fa-user text-sm"></i>
                     </a>
 
                     {% if user.is_authenticated %}
-                        <a href="{% url 'booking_history' %}" class="hidden md:inline-flex px-3 py-2 rounded-xl bg-brand-50 text-brand-800 text-xs font-semibold hover:bg-brand-100 transition shrink-0" title="My Bookings">
+                        <a href="{% url 'booking_history' %}" class="hidden md:inline-flex px-3 py-2 rounded-xl bg-brand-50 text-brand-800 text-xs font-semibold hover:bg-brand-100 hover:shadow-sm transition-all duration-200 shrink-0" title="My Bookings">
                             <i class="fa-solid fa-receipt mr-1"></i> Bookings
                         </a>
                         <form method="post" action="{% url 'logout' %}" class="inline-flex">
                             {% csrf_token %}
-                            <button type="submit" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 transition shrink-0 hidden sm:inline-flex" title="Logout">
+                            <button type="submit" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 hover:shadow-md transition-all duration-200 shrink-0 hidden sm:inline-flex" title="Logout">
                                 <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
                             </button>
                         </form>
                     {% else %}
-                        <a href="{% url 'login' %}" class="hidden sm:inline-flex px-3 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 transition shrink-0" title="Login">
+                        <a href="{% url 'login' %}" class="hidden sm:inline-flex px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 hover:shadow-md hover:shadow-brand-500/25 transition-all duration-200 shrink-0" title="Login">
                             <i class="fa-solid fa-right-to-bracket mr-1"></i> Login
                         </a>
                     {% endif %}
 
                     <!-- Mobile Menu Button -->
-                    <button id="mobileMenuBtn" class="xl:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 shrink-0">
-                        <i id="mobileMenuBtnIcon" class="fa-solid fa-bars text-lg"></i>
+                    <button id="mobileMenuBtn" class="xl:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 shrink-0" aria-label="Toggle menu">
+                        <i id="mobileMenuBtnIcon" class="fa-solid fa-bars text-lg transition-transform duration-300"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Mobile Navigation Drawer -->
-            <div id="mobileMenu" class="hidden xl:hidden border-t border-slate-200 py-3 space-y-1">
-                <div class="flex md:hidden items-center gap-2 pb-2 mb-1 border-b border-slate-100">
+            <div id="mobileMenu" class="hidden xl:hidden border-t border-slate-100 py-3 space-y-1 overflow-hidden">
+                <div class="flex md:hidden items-center gap-2 pb-3 mb-2 border-b border-slate-100">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'booking_history' %}" class="flex-1 text-center px-3 py-2 rounded-xl bg-brand-50 text-brand-800 text-xs font-semibold">My Bookings</a>
+                        <a href="{% url 'booking_history' %}" class="flex-1 text-center px-3 py-2.5 rounded-xl bg-brand-50 text-brand-800 text-xs font-bold hover:bg-brand-100 transition-colors duration-200">My Bookings</a>
                         <form method="post" action="{% url 'logout' %}" class="flex-1">
                             {% csrf_token %}
-                            <button type="submit" class="w-full text-center px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">Logout</button>
+                            <button type="submit" class="w-full text-center px-3 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-700 transition-colors duration-200">Logout</button>
                         </form>
                     {% else %}
-                        <a href="{% url 'login' %}" class="flex-1 text-center px-3 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Login</a>
-                        <a href="{% url 'register' %}" class="flex-1 text-center px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">Register</a>
+                        <a href="{% url 'login' %}" class="flex-1 text-center px-3 py-2.5 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors duration-200">Login</a>
+                        <a href="{% url 'register' %}" class="flex-1 text-center px-3 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-700 transition-colors duration-200">Register</a>
                     {% endif %}
                 </div>
-                <a href="{% url 'index' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-house w-6 text-slate-400"></i> Home</a>
-                <a href="{% url 'tourism_packages' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-suitcase-rolling w-6 text-indigo-500"></i> Tourism Packages</a>
-                <a href="{% url 'safety_intelligence' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-shield-halved w-6 text-emerald-600"></i> Crime & Safety Intel</a>
-                <a href="{% url 'women_safety' %}" class="block px-3 py-2 rounded-md font-medium text-rose-700 hover:bg-rose-50"><i class="fa-solid fa-person-dress w-6 text-rose-500"></i> Women Safe Tourism</a>
-                <a href="{% url 'verified_hotels' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-hotel w-6 text-indigo-500"></i> Verified Hotels</a>
-                <a href="{% url 'trip_planner' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-route w-6 text-teal-600"></i> Smart Trip Planner</a>
-                <a href="{% url 'memory_maker' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-camera-retro w-6 text-amber-500"></i> Tourist Memory Maker</a>
-                <a href="{% url 'customer_feedback' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-comment-dots w-6 text-purple-500"></i> Customer Feedback</a>
-                <a href="{% url 'post_trip_review' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-star w-6 text-amber-500"></i> Post-Trip Reviews</a>
-                <a href="{% url 'ai_assistant' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-robot w-6 text-fuchsia-600"></i> AI Travel Assistant</a>
-                <a href="{% url 'emergency_map' %}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-truck-medical w-6 text-rose-600"></i> Nearby Emergency Map</a>
-                <a href="{% url 'admin_dashboard' %}" class="block px-3 py-2 rounded-md font-medium text-indigo-700 hover:bg-indigo-50"><i class="fa-solid fa-chart-line w-6 text-indigo-600"></i> Tourism Authority Dashboard</a>
+                <a href="{% url 'index' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-house text-slate-500 text-xs"></i></span> Home
+                </a>
+                <a href="{% url 'tourism_packages' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-suitcase-rolling text-indigo-500 text-xs"></i></span> Tourism Packages
+                </a>
+                <a href="{% url 'safety_intelligence' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i></span> Crime &amp; Safety Intel
+                </a>
+                <a href="{% url 'women_safety' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-rose-700 hover:bg-rose-50 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-person-dress text-rose-500 text-xs"></i></span> Women Safe Tourism
+                </a>
+                <a href="{% url 'verified_hotels' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-hotel text-indigo-500 text-xs"></i></span> Verified Hotels
+                </a>
+                <a href="{% url 'trip_planner' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-route text-teal-600 text-xs"></i></span> Smart Trip Planner
+                </a>
+                <a href="{% url 'memory_maker' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-camera-retro text-amber-500 text-xs"></i></span> Tourist Memory Maker
+                </a>
+                <a href="{% url 'customer_feedback' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-comment-dots text-purple-500 text-xs"></i></span> Customer Feedback
+                </a>
+                <a href="{% url 'post_trip_review' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-star text-amber-500 text-xs"></i></span> Post-Trip Reviews
+                </a>
+                <a href="{% url 'ai_assistant' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-fuchsia-50 hover:text-fuchsia-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-fuchsia-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-robot text-fuchsia-600 text-xs"></i></span> AI Travel Assistant
+                </a>
+                <div class="border-t border-slate-100 my-2"></div>
+                <a href="{% url 'emergency_map' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-truck-medical text-rose-600 text-xs"></i></span> Nearby Emergency Map
+                </a>
+                <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-indigo-700 hover:bg-indigo-50 transition-all duration-200">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-chart-line text-indigo-600 text-xs"></i></span> Tourism Authority Dashboard
+                </a>
             </div>
         </div>
     </header>
@@ -219,8 +388,9 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-300 border-t border-slate-800 mt-16 pt-12 pb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer class="bg-slate-900 text-slate-300 border-t border-slate-800 mt-16 pt-12 pb-8 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 20% 80%, #14b8a6 1px, transparent 1px), radial-gradient(circle at 80% 20%, #14b8a6 1px, transparent 1px); background-size: 40px 40px;"></div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
                 
                 <!-- Col 1: Brand & Tagline -->
@@ -289,7 +459,10 @@
 
             <div class="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400">
                 <p>&copy; 2026 YATRALENS. Intelligent Tourism & Safety Companion for Travelers in India.</p>
-                <div class="flex gap-4 mt-3 sm:mt-0">
+                <div class="flex items-center flex-wrap gap-4 mt-3 sm:mt-0">
+                    <button onclick="triggerIntroReplay()" class="text-brand-400 hover:text-brand-300 font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-film text-xs"></i> Replay Intro Animation
+                    </button>
                     <a href="{% url 'safety_intelligence' %}" class="hover:text-white">Crime & Safety Intel</a>
                     <a href="{% url 'tourism_packages' %}" class="hover:text-white">Tourism Packages</a>
                     <a href="{% url 'customer_feedback' %}" class="hover:text-white">Customer Feedback</a>
@@ -300,7 +473,7 @@
     </footer>
 
     <!-- ========================================================================= -->
-    <!-- EMERGENCY SOS MODAL (Interactive 3-Second Hold Activation & Alert Dispatch) -->
+    <!-- EMERGENCY SOS MODAL (Real Device GPS, ERSS 112 CAD & Instant WhatsApp/SMS) -->
     <!-- ========================================================================= -->
     <div id="sosModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border-4 border-red-600 transform transition-all">
@@ -314,14 +487,14 @@
                     <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
                 </div>
                 <h3 class="text-xl font-black uppercase tracking-wider">Emergency SOS Trigger</h3>
-                <p class="text-xs text-red-100 font-medium">Instant police broadcast & trusted contacts notifier</p>
+                <p class="text-xs text-red-100 font-medium">National ERSS 112 Dispatch & Rapid First-Response Grid</p>
             </div>
 
             <!-- Modal Body -->
-            <div class="p-6 space-y-6 text-center">
+            <div class="p-6 space-y-5 text-center">
                 
                 <!-- Interactive Hold-to-Activate Button -->
-                <div id="sosHoldArea" class="flex flex-col items-center justify-center">
+                <div id="sosHoldArea" class="flex flex-col items-center justify-center space-y-3">
                     <div class="relative w-40 h-40 flex items-center justify-center cursor-pointer select-none"
                          id="sosTriggerBtn"
                          onmousedown="startSosHold()"
@@ -344,27 +517,55 @@
                             <span id="sosCountdownText" class="text-[10px] text-red-200">Press & Hold</span>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-2">Press and hold the button for 3 seconds to trigger emergency alert</p>
+                    
+                    <div class="space-y-1">
+                        <p class="text-xs font-bold text-slate-700">Press and hold for 3 seconds to trigger emergency alert</p>
+                        <p id="sosGpsReadingStatus" class="text-[11px] text-teal-700 font-mono flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-location-crosshairs"></i> Acquiring real GPS coordinates...
+                        </p>
+                    </div>
                 </div>
 
                 <!-- SOS Activated State (Initially Hidden) -->
                 <div id="sosActiveResult" class="hidden text-left space-y-4">
-                    <div class="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 animate-ping">
-                            <i class="fa-solid fa-bullhorn"></i>
+                    
+                    <!-- Alert Confirmation Card -->
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white animate-pulse">
+                                🚨 ERSS 112 DISPATCH ACTIVE
+                            </span>
+                            <span id="sosCadRefBadge" class="text-[11px] font-mono font-bold text-red-900">
+                                CAD: ERSS-112-IN-GENERATING
+                            </span>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-red-900 text-sm">🚨 SOS ALERT BROADCASTED!</h4>
-                            <p class="text-xs text-red-700">GPS Coordinates (16.9891° N, 81.7840° E) & alert dispatched to family and Rajahmundry Police Control.</p>
+                        <p id="sosDispatchSummary" class="text-xs text-red-800 leading-snug">
+                            Emergency beacon broadcasted. Coordinates locked and transmitted to state police control.
+                        </p>
+                        <div id="sosJurisdictionBox" class="text-[11px] font-semibold text-slate-700 bg-white/80 p-2 rounded-xl border border-red-100 flex items-center justify-between">
+                            <span><i class="fa-solid fa-building-shield text-teal-700 mr-1"></i> <b id="sosStationName">Rajahmundry Police</b></span>
+                            <span id="sosResponseTime" class="text-rose-700 font-bold">ETA: ~5 mins</span>
                         </div>
                     </div>
 
-                    <!-- Rapid Helplines Grid -->
+                    <!-- 1-Click Fast Broadcast Actions (WhatsApp & SMS) -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <a id="sosWhatsappBtn" href="#" target="_blank" class="p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl flex items-center justify-center gap-2 text-xs font-bold shadow-md transition">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>Send WhatsApp SOS</span>
+                        </a>
+                        <a id="sosSmsBtn" href="#" class="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center gap-2 text-xs font-bold shadow-md transition">
+                            <i class="fa-solid fa-comment-sms text-lg"></i>
+                            <span>Send Direct SMS</span>
+                        </a>
+                    </div>
+
+                    <!-- Rapid Toll-Free Helplines Grid -->
                     <div class="grid grid-cols-2 gap-2">
                         <a href="tel:112" class="p-3 bg-red-600 text-white rounded-xl flex items-center gap-2 hover:bg-red-700 transition">
                             <i class="fa-solid fa-phone text-lg"></i>
                             <div>
-                                <p class="text-[10px] uppercase font-bold text-red-200">Police & Medical</p>
+                                <p class="text-[10px] uppercase font-bold text-red-200">National ERSS</p>
                                 <p class="text-sm font-black">Call 112</p>
                             </div>
                         </a>
@@ -377,28 +578,7 @@
                         </a>
                     </div>
 
-                    <!-- Nearby Emergency Services -->
-                    <div class="border-t border-slate-200 pt-3">
-                        <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nearest Dispatched Stations:</h5>
-                        <div class="space-y-1.5 text-xs">
-                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
-                                <div>
-                                    <span class="font-bold text-slate-900">🚔 Rajahmundry Central Police</span>
-                                    <p class="text-[10px] text-slate-500">0.6 km away • Response unit standby</p>
-                                </div>
-                                <a href="tel:08832471033" class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-bold">Call</a>
-                            </div>
-                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
-                                <div>
-                                    <span class="font-bold text-slate-900">🏥 Govt General Hospital</span>
-                                    <p class="text-[10px] text-slate-500">1.2 km away • Trauma Center 24/7</p>
-                                </div>
-                                <a href="tel:08832473456" class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-bold">Call</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Cancel / Reset Button -->
+                    <!-- Stand Down / Cancel Alarm Button -->
                     <button onclick="resetSosModal()" class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
                         I am safe now / Cancel Alarm
                     </button>
@@ -408,28 +588,120 @@
         </div>
     </div>
 
+    <!-- Mobile Bottom App Navigation Bar (Native App Style) -->
+    <div class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 shadow-2xl md:hidden px-2 py-1.5 flex items-center justify-around text-[10px] font-bold text-slate-500">
+        <a href="{% url 'index' %}" class="flex flex-col items-center py-1 px-2 rounded-xl transition {% if active_tab == 'home' %}text-brand-700 bg-brand-50 font-bold{% else %}hover:text-slate-900{% endif %}">
+            <i class="fa-solid fa-house text-base mb-0.5"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'tourism_packages' %}" class="flex flex-col items-center py-1 px-2 rounded-xl transition {% if active_tab == 'packages' %}text-brand-700 bg-brand-50 font-bold{% else %}hover:text-slate-900{% endif %}">
+            <i class="fa-solid fa-suitcase-rolling text-base mb-0.5"></i>
+            <span>Packages</span>
+        </a>
+        
+        <!-- Center Floating SOS Button -->
+        <button onclick="openSosModal()" class="flex flex-col items-center -mt-5 bg-gradient-to-tr from-red-600 to-rose-600 text-white w-12 h-12 rounded-full shadow-lg shadow-red-500/50 justify-center animate-sos-pulse border-2 border-white transform active:scale-90 transition" title="Emergency SOS">
+            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        </button>
+
+        <a href="{% url 'emergency_map' %}" class="flex flex-col items-center py-1 px-2 rounded-xl transition {% if active_tab == 'emergency' %}text-rose-700 bg-rose-50 font-bold{% else %}hover:text-slate-900{% endif %}">
+            <i class="fa-solid fa-truck-medical text-base mb-0.5"></i>
+            <span>Safe Map</span>
+        </a>
+        <a href="{% url 'offline_hub' %}" class="flex flex-col items-center py-1 px-2 rounded-xl transition {% if active_tab == 'offline' %}text-amber-700 bg-amber-50 font-bold{% else %}hover:text-slate-900{% endif %}">
+            <i class="fa-solid fa-shield-halved text-base mb-0.5"></i>
+            <span>Offline Hub</span>
+        </a>
+    </div>
+
     <!-- Global Toast Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-16 md:bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
     <!-- Scripts -->
     <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => {
+                        console.log('[YATRALENS PWA] Service Worker active at scope:', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.warn('[YATRALENS PWA] Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        // PWA Install Prompt Banner Logic
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwaInstallBanner');
+            if (banner) banner.classList.remove('hidden');
+        });
+
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`[YATRALENS PWA] User response: ${outcome}`);
+                    deferredPrompt = null;
+                    dismissPwaBanner();
+                }
+            });
+        }
+
+        function dismissPwaBanner() {
+            const banner = document.getElementById('pwaInstallBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        // Online / Offline Network Monitoring
+        function updateNetworkStatus() {
+            const bar = document.getElementById('offlineStatusBar');
+            if (!bar) return;
+            if (!navigator.onLine) {
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+                showToast('⚠️ Network Disconnected: Offline emergency mode active', 'error');
+            } else {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+            }
+        }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        document.addEventListener('DOMContentLoaded', updateNetworkStatus);
+
         // Mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
         if (mobileMenuBtn) {
             mobileMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                mobileMenu.classList.toggle('hidden');
-                document.getElementById('mobileMenuBtnIcon').classList.toggle('fa-bars');
-                document.getElementById('mobileMenuBtnIcon').classList.toggle('fa-xmark');
+                const isOpen = !mobileMenu.classList.contains('hidden');
+                if (isOpen) {
+                    mobileMenu.classList.add('hidden');
+                    document.getElementById('mobileMenuBtnIcon').classList.remove('fa-xmark');
+                    document.getElementById('mobileMenuBtnIcon').classList.add('fa-bars');
+                    document.getElementById('mobileMenuBtnIcon').style.transform = 'rotate(0deg)';
+                } else {
+                    mobileMenu.classList.remove('hidden');
+                    document.getElementById('mobileMenuBtnIcon').classList.remove('fa-bars');
+                    document.getElementById('mobileMenuBtnIcon').classList.add('fa-xmark');
+                    document.getElementById('mobileMenuBtnIcon').style.transform = 'rotate(90deg)';
+                }
             });
-            // Close mobile menu when a link inside is clicked
             mobileMenu.querySelectorAll('a').forEach(a => {
                 a.addEventListener('click', () => {
                     mobileMenu.classList.add('hidden');
                     const ic = document.getElementById('mobileMenuBtnIcon');
                     ic.classList.add('fa-bars');
                     ic.classList.remove('fa-xmark');
+                    ic.style.transform = 'rotate(0deg)';
                 });
             });
         }
@@ -437,26 +709,72 @@
         // Desktop "More" dropdown
         function toggleMoreMenu() {
             const m = document.getElementById('moreMenu');
-            m.classList.toggle('hidden');
+            const chevron = document.getElementById('moreMenuChevron');
+            if (m) {
+                const isOpen = !m.classList.contains('hidden');
+                if (isOpen) {
+                    m.classList.add('hidden');
+                    m.style.opacity = '0';
+                    m.style.transform = 'translateY(-4px)';
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    m.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        m.style.opacity = '1';
+                        m.style.transform = 'translateY(0)';
+                    });
+                    if (chevron) chevron.style.transform = 'rotate(180deg)';
+                }
+            }
         }
         document.addEventListener('click', (e) => {
             const wrap = document.getElementById('moreMenuWrap');
             const menu = document.getElementById('moreMenu');
+            const chevron = document.getElementById('moreMenuChevron');
             if (wrap && menu && !menu.classList.contains('hidden') && !wrap.contains(e.target)) {
                 menu.classList.add('hidden');
+                menu.style.opacity = '0';
+                menu.style.transform = 'translateY(-4px)';
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
             }
         });
 
-        // SOS Modal Control
+        // SOS Modal Control & Real Device Geolocation
         let sosHoldTimer = null;
-        let sosHoldProgress = 0;
-        const totalHoldTime = 3000; // 3 seconds
-        const circleCircumference = 339.29; // 2 * PI * 54
-        let audioContext = null;
+        const totalHoldTime = 3000;
+        const circleCircumference = 339.29;
+        let deviceGpsLocation = { lat: 16.9891, lng: 81.7840, accuracy: 10, isLive: false };
+
+        function acquireRealDeviceLocation() {
+            const statusEl = document.getElementById('sosGpsReadingStatus');
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        deviceGpsLocation = {
+                            lat: parseFloat(pos.coords.latitude.toFixed(5)),
+                            lng: parseFloat(pos.coords.longitude.toFixed(5)),
+                            accuracy: Math.round(pos.coords.accuracy),
+                            isLive: true
+                        };
+                        if (statusEl) {
+                            statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> GPS Locked: ${deviceGpsLocation.lat}, ${deviceGpsLocation.lng} (±${deviceGpsLocation.accuracy}m)`;
+                        }
+                    },
+                    (err) => {
+                        console.warn('GPS permission denied or timed out:', err);
+                        if (statusEl) {
+                            statusEl.innerHTML = `<i class="fa-solid fa-satellite text-amber-600"></i> Region GPS Anchored: ${deviceGpsLocation.lat}, ${deviceGpsLocation.lng}`;
+                        }
+                    },
+                    { enableHighAccuracy: true, timeout: 6000, maximumAge: 20000 }
+                );
+            }
+        }
 
         function openSosModal() {
             document.getElementById('sosModal').classList.remove('hidden');
             document.getElementById('sosModal').classList.add('flex');
+            acquireRealDeviceLocation();
             resetSosState();
         }
 
@@ -471,6 +789,11 @@
             const text = document.getElementById('sosCountdownText');
             let elapsed = 0;
             const interval = 50;
+
+            // Haptic vibration feedback during hold
+            if ('vibrate' in navigator) {
+                navigator.vibrate(80);
+            }
 
             sosHoldTimer = setInterval(() => {
                 elapsed += interval;
@@ -511,27 +834,64 @@
 
         function triggerEmergencySos() {
             playSiren();
+
+            // Heavy tactile pulse on SOS trigger
+            if ('vibrate' in navigator) {
+                navigator.vibrate([400, 100, 400, 100, 600]);
+            }
+
             document.getElementById('sosHoldArea').classList.add('hidden');
             document.getElementById('sosActiveResult').classList.remove('hidden');
             
-            // Dispatch to backend API
+            const payload = {
+                traveler_name: 'Priya Sharma (Solo Traveler)',
+                latitude: deviceGpsLocation.lat,
+                longitude: deviceGpsLocation.lng,
+                location_name: deviceGpsLocation.isLive ? `Live Device Pin (${deviceGpsLocation.lat}, ${deviceGpsLocation.lng})` : 'Godavari Pushkar Ghat, Rajahmundry',
+                battery_level: 88,
+                is_offline_sync: !navigator.onLine
+            };
+
+            // Post to backend ERSS 112 CAD engine
             fetch('/api/sos/trigger/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    traveler_name: 'Priya Sharma (Solo Traveler)',
-                    latitude: 16.9891,
-                    longitude: 81.7840,
-                    location_name: 'Godavari Pushkar Ghat, Rajahmundry'
-                })
+                body: JSON.stringify(payload)
             })
             .then(res => res.json())
             .then(data => {
-                showToast('🚨 SOS Dispatched! Police and emergency contacts notified.', 'error');
+                if (data.cad_reference_id) {
+                    document.getElementById('sosCadRefBadge').innerText = `CAD: ${data.cad_reference_id}`;
+                }
+                if (data.cad_dispatch && data.cad_dispatch.assigned_jurisdiction) {
+                    const j = data.cad_dispatch.assigned_jurisdiction;
+                    document.getElementById('sosStationName').innerText = j.police_station;
+                    document.getElementById('sosResponseTime').innerText = `ETA: ~${j.estimated_pcr_arrival_mins} mins`;
+                }
+                if (data.whatsapp_sos_url) {
+                    document.getElementById('sosWhatsappBtn').href = data.whatsapp_sos_url;
+                }
+                if (data.sms_sos_url) {
+                    document.getElementById('sosSmsBtn').href = data.sms_sos_url;
+                }
+                showToast(`🚨 ERSS 112 Alert ${data.cad_reference_id || ''} Dispatched!`, 'error');
             })
             .catch(err => {
-                console.error(err);
-                showToast('🚨 Emergency Signal Recorded Locally!', 'error');
+                console.warn('Network failed during SOS, saving to offline storage queue:', err);
+                // Save to local offline queue
+                const queuedAlerts = JSON.parse(localStorage.getItem('yatralens_offline_sos') || '[]');
+                queuedAlerts.push({
+                    id: 'OFFLINE-SOS-' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    latitude: deviceGpsLocation.lat,
+                    longitude: deviceGpsLocation.lng,
+                    traveler_name: payload.traveler_name,
+                    synced: false
+                });
+                localStorage.setItem('yatralens_offline_sos', JSON.stringify(queuedAlerts));
+                document.getElementById('sosCadRefBadge').innerText = 'QUEUED OFFLINE (LOCAL BEACON)';
+                document.getElementById('sosDispatchSummary').innerText = 'Device in dead-zone. Alert recorded locally and will transmit to ERSS 112 as soon as network returns.';
+                showToast('🚨 SOS beacon queued locally in device memory!', 'error');
             });
         }
 
@@ -558,6 +918,7 @@
         // Global Toast Notification Helper
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
+            if (!container) return;
             const toast = document.createElement('div');
             
             let bg = 'bg-slate-900 border-slate-700 text-white';
@@ -585,6 +946,47 @@
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
+
+        // Global Intro Animation Replay Trigger
+        function triggerIntroReplay() {
+            if (typeof window.playYatralensIntro === 'function') {
+                window.playYatralensIntro(true);
+            } else {
+                window.location.href = "{% url 'index' %}?replay=1";
+            }
+        }
+
+        // Scroll-triggered reveal animations via IntersectionObserver
+        document.addEventListener('DOMContentLoaded', () => {
+            const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+            if (revealEls.length && 'IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                revealEls.forEach(el => observer.observe(el));
+            } else {
+                revealEls.forEach(el => el.classList.add('visible'));
+            }
+
+            // Navbar shadow on scroll
+            const header = document.querySelector('header');
+            if (header) {
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 20) {
+                        header.classList.add('shadow-md');
+                        header.classList.remove('shadow-sm');
+                    } else {
+                        header.classList.remove('shadow-md');
+                        header.classList.add('shadow-sm');
+                    }
+                }, { passive: true });
+            }
+        });
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>

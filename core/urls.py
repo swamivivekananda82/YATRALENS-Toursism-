@@ -30,6 +30,7 @@ urlpatterns = [
     path('memories/', views.memory_maker_view, name='memory_maker'),
     path('memories/<int:memory_id>/', views.memory_detail_view, name='memory_detail'),
     path('memories/<int:memory_id>/pdf/', views.export_memory_pdf_view, name='export_memory_pdf'),
+    path('memories/<int:memory_id>/delete/', views.delete_memory_view, name='delete_memory'),
     path('track/<str:token>/', views.live_tracker_view, name='live_tracker'),
 
     # Pages — Customer Feedback System
@@ -48,6 +49,7 @@ urlpatterns = [
 
     # Pages — Booking & Online Payment
     path('booking/<slug:package_slug>/', views.booking_view, name='booking'),
+    path('booking/<str:booking_ref>/ticket-pdf/', views.export_ticket_pdf_view, name='ticket_pdf'),
     path('payment/<str:booking_ref>/', views.payment_view, name='payment'),
     path('payment/success/<str:booking_ref>/', views.payment_success_view, name='payment_success'),
     path('bookings/', views.booking_history_view, name='booking_history'),
@@ -83,8 +85,18 @@ urlpatterns = [
     path('api/memories/generate-story/', views.api_generate_story, name='api_generate_story'),
     path('api/memories/save/', views.api_save_memory, name='api_save_memory'),
 
+    # Pages — Offline Emergency Hub & PWA Shell
+    path('offline/', views.offline_hub_view, name='offline_hub'),
+    path('manifest.json', views.manifest_view, name='manifest_json'),
+    path('sw.js', views.service_worker_view, name='service_worker'),
+
     # REST APIs — Incidents & Admin
     path('api/incidents/report/', views.api_report_incident, name='api_report_incident'),
     path('api/admin/broadcast-alert/', views.api_admin_broadcast_alert, name='api_admin_broadcast_alert'),
     path('api/admin/toggle-hotel/', views.api_admin_toggle_hotel, name='api_admin_toggle_hotel'),
+
+    # REST APIs — Government ERSS 112 CAD & Offline Sync
+    path('api/erss/cad/<str:cad_id>/', views.api_erss_cad_status, name='api_erss_cad_status'),
+    path('api/sos/sync-offline/', views.api_offline_sync_sos, name='api_offline_sync_sos'),
+    path('api/emergency/offline-bundle/', views.api_emergency_offline_bundle, name='api_emergency_offline_bundle'),
 ]

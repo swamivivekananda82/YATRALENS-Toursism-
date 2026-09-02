@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+
+{% block title %}Offline Emergency Hub & Offline Directory – YATRALENS{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white py-8 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider mb-2 border border-amber-500/30">
+                    <i class="fa-solid fa-plane-slash"></i> Offline Mode Active (Zero-Data Emergency Grid)
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+                    Offline Emergency Hub & Field Guide
+                </h1>
+                <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+                    This safety hub is cached directly on your device. You can trigger emergency beacons, view phone numbers, and access critical first-aid instructions even without cellular network or data.
+                </p>
+            </div>
+
+            <!-- Emergency Direct Dial 112 -->
+            <div class="flex items-center gap-3 shrink-0">
+                <a href="tel:112" class="px-5 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2 animate-bounce">
+                    <i class="fa-solid fa-phone-volume text-base"></i>
+                    <span>Call National 112</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Offline SOS Dispatch Queue Card -->
+    <div class="bg-gradient-to-br from-red-900/90 via-red-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-red-500/30 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 opacity-10 text-white text-9xl pointer-events-none">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div class="space-y-2 max-w-xl">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/30 text-red-200 border border-red-400/30">
+                    <i class="fa-solid fa-tower-broadcast mr-1"></i> Auto-Queued Dispatch
+                </span>
+                <h2 class="text-xl sm:text-2xl font-black">Trigger Offline SOS Beacon</h2>
+                <p class="text-xs text-red-200 leading-relaxed">
+                    If you are in a dead-zone with no network, tapping below will record your exact hardware GPS coordinates and local device timestamp into your phone's storage. It will <b>automatically transmit to ERSS 112 & police control rooms</b> the moment any cellular signal or Wi-Fi reconnects.
+                </p>
+                <div id="offlineGpsStatus" class="text-[11px] font-mono text-teal-300 flex items-center gap-1.5 pt-1">
+                    <i class="fa-solid fa-location-crosshairs"></i> Checking device GPS sensors...
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
+                <button onclick="triggerOfflineSosQueue()" class="w-full sm:w-auto px-6 py-4 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-red-900/50 flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-satellite text-lg"></i>
+                    <span>Queue SOS Emergency</span>
+                </button>
+                <button onclick="readDeviceGps()" class="w-full sm:w-auto px-4 py-4 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs rounded-2xl border border-white/20 flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh GPS
+                </button>
+            </div>
+        </div>
+
+        <!-- Offline Queue Status Table -->
+        <div id="queuedSosCard" class="mt-6 pt-6 border-t border-red-500/30 hidden">
+            <div class="flex items-center justify-between text-xs font-bold text-red-200 mb-2">
+                <span><i class="fa-solid fa-list-check mr-1.5"></i> Pending Emergency Beacons in Local Memory:</span>
+                <span id="queueCountBadge" class="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px]">0 Queued</span>
+            </div>
+            <div id="queuedSosList" class="space-y-2 text-xs font-mono"></div>
+        </div>
+    </div>
+
+    <!-- Official Helpline Speed-Dial Grid -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-phone-shield text-teal-600"></i>
+                <span>Direct Toll-Free Emergency Numbers (No Data Required)</span>
+            </h3>
+            <span class="text-xs text-slate-500 font-medium">Standard Cellular Voice Calls</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-lg font-black">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-red-50 text-red-700">All-in-One</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 text-sm">National ERSS 112</h4>
+                    <p class="text-[11px] text-slate-500">Police, Fire, Ambulance & Disaster Response</p>
+                </div>
+                <a href="tel:112" class="block text-center py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition">
+                    <i class="fa-solid fa-phone mr-1.5"></i> Dial 112
+                </a>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-black">
+                        <i class="fa-solid fa-person-dress"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">Women Rapid</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 text-sm">Women in Distress 1091</h4>
+                    <p class="text-[11px] text-slate-500">24/7 dedicated rapid police protection unit</p>
+                </div>
+                <a href="tel:1091" class="block text-center py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition">
+                    <i class="fa-solid fa-phone mr-1.5"></i> Dial 1091
+                </a>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black">
+                        <i class="fa-solid fa-truck-medical"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Medical</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 text-sm">Ambulance & Health 108</h4>
+                    <p class="text-[11px] text-slate-500">Emergency medical transport & life support</p>
+                </div>
+                <a href="tel:108" class="block text-center py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition">
+                    <i class="fa-solid fa-phone mr-1.5"></i> Dial 108
+                </a>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-lg font-black">
+                        <i class="fa-solid fa-earth-asia"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">Tourism</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 text-sm">Tourist Helpline 1363</h4>
+                    <p class="text-[11px] text-slate-500">Ministry of Tourism 24/7 multilingual support</p>
+                </div>
+                <a href="tel:1363" class="block text-center py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black uppercase tracking-wider transition">
+                    <i class="fa-solid fa-phone mr-1.5"></i> Dial 1363
+                </a>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-black">
+                        <i class="fa-solid fa-hand-holding-hand"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">Anti-Harassment</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 text-sm">Women Power Line 1090</h4>
+                    <p class="text-[11px] text-slate-500">Stalking, cyber harassment & eve-teasing squad</p>
+                </div>
+                <a href="tel:1090" class="block text-center py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-black uppercase tracking-wider transition">
+                    <i class="fa-solid fa-phone mr-1.5"></i> Dial 1090
+                </a>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-black">
+                        <i class="fa-solid fa-children"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">Child Support</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 text-sm">Childline India 1098</h4>
+                    <p class="text-[11px] text-slate-500">Protection & immediate assistance for children</p>
+                </div>
+                <a href="tel:1098" class="block text-center py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-black uppercase tracking-wider transition">
+                    <i class="fa-solid fa-phone mr-1.5"></i> Dial 1098
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Offline First-Aid & Emergency Action Protocols -->
+    <div class="space-y-4">
+        <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-book-medical text-rose-600"></i>
+            <span>Offline First-Aid & Field Survival Protocols</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-2">
+                <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                    <i class="fa-solid fa-heart-pulse mr-1"></i> Medical / Heatstroke
+                </span>
+                <h4 class="font-bold text-slate-900 text-sm">Heat Exhaustion & Dehydration</h4>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                    <li>Move victim immediately to shade or air-conditioned vehicle.</li>
+                    <li>Loosen tight clothing and apply cool damp cloths to neck and forehead.</li>
+                    <li>Sip ORS (Oral Rehydration Salts) or coconut water slowly; avoid caffeinated drinks.</li>
+                    <li>If vomiting or confusion occurs, call <b>108</b> immediately.</li>
+                </ul>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-2">
+                <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                    <i class="fa-solid fa-person-falling-burst mr-1"></i> Wildlife / Terrain
+                </span>
+                <h4 class="font-bold text-slate-900 text-sm">Snakebite & Insect Stings</h4>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                    <li>Keep the patient calm and immobilize the affected limb below heart level.</li>
+                    <li><b>DO NOT</b> cut, suck poison, or tie tight tourniquets.</li>
+                    <li>Remove rings, watches, and tight footwear before swelling starts.</li>
+                    <li>Rush to nearest district government hospital for Anti-Snake Venom (ASV).</li>
+                </ul>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-2">
+                <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800">
+                    <i class="fa-solid fa-person-walking-arrow-right mr-1"></i> Safety & Harassment
+                </span>
+                <h4 class="font-bold text-slate-900 text-sm">Feeling Followed or Unsafe</h4>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                    <li>Enter any well-lit hotel lobby, petrol pump, or government bank ATM immediately.</li>
+                    <li>Dial <b>112</b> or <b>1091</b> loudly so nearby persons notice.</li>
+                    <li>Activate YATRALENS siren to draw public attention and deter perpetrators.</li>
+                    <li>Stay on a live speaker call with trusted contacts until police arrive.</li>
+                </ul>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-2">
+                <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                    <i class="fa-solid fa-compass mr-1"></i> Navigation
+                </span>
+                <h4 class="font-bold text-slate-900 text-sm">Getting Lost in Remote Areas</h4>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                    <li>Stay in one open location rather than wandering deeper into unknown trails.</li>
+                    <li>Use a bright flashlight or whistle (3 short blasts is the universal SOS signal).</li>
+                    <li>Conserve phone battery: switch to Airplane mode between periodic GPS checks.</li>
+                    <li>Look for highway milestone markers or river downstream paths to reach settlements.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentOfflineGps = { lat: 16.9891, lng: 81.7840, accuracy: 10 };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        readDeviceGps();
+        renderQueuedSosList();
+        
+        // Auto-sync listener when phone reconnects to internet
+        window.addEventListener('online', () => {
+            showToast('🟢 Internet connection restored! Synchronizing queued emergency alerts...', 'success');
+            syncOfflineSosQueue();
+        });
+    });
+
+    function readDeviceGps() {
+        const statusEl = document.getElementById('offlineGpsStatus');
+        if ('geolocation' in navigator) {
+            statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locking onto device satellites...';
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    currentOfflineGps = {
+                        lat: pos.coords.latitude.toFixed(5),
+                        lng: pos.coords.longitude.toFixed(5),
+                        accuracy: Math.round(pos.coords.accuracy)
+                    };
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> GPS Locked: ${currentOfflineGps.lat}, ${currentOfflineGps.lng} (±${currentOfflineGps.accuracy}m)`;
+                },
+                (err) => {
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> GPS Cached: ${currentOfflineGps.lat}, ${currentOfflineGps.lng} (Permission default)`;
+                },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+            );
+        } else {
+            statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> GPS not supported on this browser`;
+        }
+    }
+
+    function triggerOfflineSosQueue() {
+        const queuedAlerts = JSON.parse(localStorage.getItem('yatralens_offline_sos') || '[]');
+        const newAlert = {
+            id: 'OFFLINE-SOS-' + Date.now(),
+            timestamp: new Date().toISOString(),
+            latitude: currentOfflineGps.lat,
+            longitude: currentOfflineGps.lng,
+            accuracy: currentOfflineGps.accuracy,
+            traveler_name: 'Priya Sharma (Solo Traveler)',
+            battery_level: navigator.getBattery ? 80 : 85,
+            synced: false
+        };
+
+        queuedAlerts.push(newAlert);
+        localStorage.setItem('yatralens_offline_sos', JSON.stringify(queuedAlerts));
+
+        // Haptic feedback
+        if ('vibrate' in navigator) {
+            navigator.vibrate([300, 100, 300, 100, 500]);
+        }
+
+        renderQueuedSosList();
+        showToast('🚨 SOS beacon queued in phone memory! Will auto-transmit upon network detection.', 'error');
+
+        // If online right now, sync immediately
+        if (navigator.onLine) {
+            syncOfflineSosQueue();
+        }
+    }
+
+    function renderQueuedSosList() {
+        const queuedAlerts = JSON.parse(localStorage.getItem('yatralens_offline_sos') || '[]');
+        const card = document.getElementById('queuedSosCard');
+        const list = document.getElementById('queuedSosList');
+        const badge = document.getElementById('queueCountBadge');
+
+        if (!card || !list) return;
+
+        if (queuedAlerts.length === 0) {
+            card.classList.add('hidden');
+            return;
+        }
+
+        card.classList.remove('hidden');
+        badge.innerText = `${queuedAlerts.length} Queued`;
+        
+        list.innerHTML = queuedAlerts.map(a => `
+            <div class="bg-black/40 p-3 rounded-xl border border-red-500/20 flex items-center justify-between">
+                <div>
+                    <span class="font-bold text-red-400">${a.id}</span>
+                    <span class="text-slate-400 text-[10px] ml-2">📍 ${a.latitude}, ${a.longitude}</span>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                    ${a.synced ? '✅ Dispatched' : '⏳ Queued for Dispatch'}
+                </span>
+            </div>
+        `).join('');
+    }
+
+    async function syncOfflineSosQueue() {
+        const queuedAlerts = JSON.parse(localStorage.getItem('yatralens_offline_sos') || '[]');
+        const pending = queuedAlerts.filter(a => !a.synced);
+        if (pending.length === 0) return;
+
+        for (const item of pending) {
+            try {
+                const res = await fetch('/api/sos/sync-offline/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+                if (res.ok) {
+                    item.synced = true;
+                }
+            } catch(e) {
+                console.warn('Sync failed, will retry on next connection:', e);
+            }
+        }
+
+        // Clean up synced items
+        const remaining = queuedAlerts.filter(a => !a.synced);
+        localStorage.setItem('yatralens_offline_sos', JSON.stringify(remaining));
+        renderQueuedSosList();
+        if (remaining.length === 0) {
+            showToast('✅ All queued offline emergency SOS beacons successfully dispatched to ERSS 112!', 'success');
+        }
+    }
+</script>
+{% endblock %}

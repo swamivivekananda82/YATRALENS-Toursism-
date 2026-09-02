@@ -27,16 +27,19 @@ The professional landing page at `/` introduces the **YATRALENS** brand, showcas
 | **💬 Customer Feedback System** | Structured form with category, rating, subject, message, destination/package linking, follow-up consent, and public feedback display with aggregate stats. |
 | **⭐ Post-Trip Review Module** | Detailed post-trip reviews with overall/safety/value ratings, pros, cons, travel tips, recommendation flag, and destination-grouped aggregate statistics. |
 | **📊 Crime Statistics & Trend Charts** | Historical `CrimeStatistic` records per destination (theft, harassment, violent crime) with auto-computed `crime_rate_per_100k` for Chart.js trend visualization. |
+| **🏛️ Official Government ERSS 112 CAD** | Ministry of Home Affairs (MHA) Computer-Aided Dispatch (CAD) engine with automated police jurisdiction resolution, PCR arrival ETA, and official CAD reference numbers. |
+| **📱 Native Mobile Bottom Bar & PWA** | Progressive Web App (`manifest.json`, `sw.js`) with installable mobile app shell, tactile haptic pulses (`navigator.vibrate`), and fixed bottom navigation bar. |
+| **🌐 Offline Emergency Hub & Queue** | Zero-data emergency directory (`/offline/`), cached first-aid protocols, and offline SOS beacon queue with automatic synchronization upon network reconnection. |
+| **🚨 Real Emergency SOS System** | Real device GPS lock (`navigator.geolocation`), 1-click WhatsApp emergency link, direct SMS emergency intent, audio siren synthesizer, and 3-second hold trigger. |
 | **👩 Women Safe Tourism** | Solo Women hub, simulated GPS location sharing ("Share with Mom"), and national helplines (112, 1091, 1090, 181). |
-| **🚨 Emergency SOS System** | 3-Second Hold button with tactile circular progress, audio siren synthesizer, automated coordinate dispatch, and nearby police/hospital contact directory. |
 | **🛣️ Safe Route Optimizer** | Compares **Fastest Route (18 min)** vs. **Safer Route (22 min ⭐ Recommended)** vs. **Balanced Route (20 min)**, avoiding unlit spots and routing along police kiosks. |
 | **🏨 Verified Safe Hotels** | SafeStay certified accommodations with 24/7 reception, CCTV, female staff, and exact distances to police stations and hospitals. |
-| **🚑 Emergency Map & Directory** | Filterable map layers for 24/7 Police Stations, Hospitals, Ambulances, Pharmacies, and Fuel/EV stations. |
+| **🚑 Emergency Map & Directory** | Filterable map layers with live "📍 Locate Me" high-accuracy GPS tracker, police station jurisdiction banner, and 24/7 emergency service directory. |
 | **🤖 AI Travel Assistant** | Contextual chatbot grounded in safety guidelines, destination advice, budget tips, and opening hours. |
 | **📅 Smart Trip Planner** | Budget-optimized (e.g. ₹5,000 / 2-day) hour-by-hour itinerary generator with safe return curfew hours. |
 | **📸 Tourist Memory Maker** | Multi-sensory journaling: Places visited, local foods tried, photos, automated historical facts, favorite moment tag. |
 | **📖 AI Travel Story Generator** | Synthesizes trip data into personalized narrative with in-browser editing and **ReportLab PDF Album Download**. |
-| **📊 Authority Admin Dashboard** | Tourism footfall analytics, Chart.js crime/safety category charts, hotel verification toggles, and live safety alert broadcaster. |
+| **📊 Authority Admin Dashboard** | Live ERSS 112 CAD emergency dispatch command feed, tourism footfall analytics, hotel verification toggles, and live safety alert broadcaster. |
 
 ---
 

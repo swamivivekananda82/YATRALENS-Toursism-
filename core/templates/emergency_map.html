@@ -33,13 +33,28 @@
     </div>
 </div>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-    
-    <!-- Map Filter Layer Control Bar -->
+    <!-- Government ERSS 112 Active Jurisdiction Banner -->
+    <div class="bg-gradient-to-r from-teal-900 via-slate-900 to-teal-950 rounded-2xl p-4 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md border border-teal-700/40">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-600/30 border border-teal-400/40 flex items-center justify-center text-teal-300 text-lg shrink-0">
+                <i class="fa-solid fa-building-shield"></i>
+            </div>
+            <div>
+                <span class="text-[10px] font-black uppercase tracking-wider text-teal-300">Official Government Law Enforcement Link</span>
+                <h3 class="font-bold text-sm text-white">East Godavari Police Control & ERSS 112 Cadre: Rajahmundry Division</h3>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+            <span class="px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">🟢 24/7 Rapid PCR Standby</span>
+            <a href="tel:112" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-black rounded-lg transition"><i class="fa-solid fa-phone mr-1"></i> 112</a>
+        </div>
+    </div>
+
+    <!-- Map Filter Layer & Live GPS Control Bar -->
     <div class="bg-white p-4 rounded-2xl shadow-md border border-slate-200 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
             <i class="fa-solid fa-layer-group text-teal-600 text-sm"></i>
-            <span>Filter Map Layers:</span>
+            <span>Filter Layers:</span>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 text-xs font-semibold">
@@ -65,9 +80,15 @@
 
             <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100">
                 <input type="checkbox" id="layerFuel" checked onchange="toggleLayer('Fuel')" class="accent-purple-600" />
-                <span>⛽ Fuel & EV Hubs</span>
+                <span>⛽ Fuel & EV</span>
             </label>
         </div>
+
+        <!-- Live GPS Locate Me Button -->
+        <button onclick="locateUserGpsOnMap()" class="px-3.5 py-1.5 bg-gradient-to-r from-teal-700 to-brand-600 hover:from-teal-800 hover:to-brand-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 transition transform active:scale-95">
+            <i class="fa-solid fa-crosshairs"></i>
+            <span>📍 Locate Me (Live GPS)</span>
+        </button>
     </div>
 
     <!-- Interactive Emergency Map -->
@@ -224,6 +245,62 @@
             });
         }
         showToast(`Layer ${type} ${isChecked ? 'visible' : 'hidden'}`, 'info');
+    }
+
+    let userGpsMarker = null;
+    let userGpsCircle = null;
+
+    function locateUserGpsOnMap() {
+        if (!('geolocation' in navigator)) {
+            showToast('Geolocation is not supported by your browser.', 'error');
+            return;
+        }
+
+        showToast('📍 Acquiring high-accuracy device GPS position...', 'info');
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const uLat = pos.coords.latitude;
+                const uLng = pos.coords.longitude;
+                const accuracy = pos.coords.accuracy;
+
+                if (userGpsMarker) eMap.removeLayer(userGpsMarker);
+                if (userGpsCircle) eMap.removeLayer(userGpsCircle);
+
+                // Create pulsing blue user marker
+                const userIconHtml = `<div class="w-6 h-6 rounded-full bg-blue-600 border-2 border-white shadow-xl flex items-center justify-center text-white text-[10px] animate-pulse"><i class="fa-solid fa-person"></i></div>`;
+                const userIcon = L.divIcon({
+                    className: 'custom-user-gps-wrap',
+                    html: userIconHtml,
+                    iconSize: [24, 24]
+                });
+
+                userGpsMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(eMap);
+                userGpsCircle = L.circle([uLat, uLng], {
+                    radius: accuracy,
+                    color: '#3b82f6',
+                    fillColor: '#93c5fd',
+                    fillOpacity: 0.2,
+                    weight: 1.5
+                }).addTo(eMap);
+
+                userGpsMarker.bindPopup(`
+                    <div class="p-2 text-xs">
+                        <div class="font-black text-blue-800">📍 Your Live Position</div>
+                        <div class="text-[11px] text-slate-600">GPS: ${uLat.toFixed(5)}, ${uLng.toFixed(5)}</div>
+                        <div class="text-[10px] text-slate-500">Accuracy: ±${Math.round(accuracy)} meters</div>
+                    </div>
+                `).openPopup();
+
+                eMap.flyTo([uLat, uLng], 15, { animate: true, duration: 1.2 });
+                showToast(`📍 GPS Locked: ${uLat.toFixed(4)}, ${uLng.toFixed(4)} (±${Math.round(accuracy)}m)`, 'success');
+            },
+            (err) => {
+                console.warn('Geolocation failed:', err);
+                showToast('Unable to lock GPS position. Check location permissions.', 'error');
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 20000 }
+        );
     }
 </script>
 {% endblock %}

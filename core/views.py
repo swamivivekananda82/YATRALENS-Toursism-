@@ -20,7 +20,7 @@ from .models import (
     EmergencyService, SafetyAlert, LiveShareSession,
     TravelMemory, TripPlan, IncidentReport,
     TourismPackage, CustomerFeedback, PostTripReview, CrimeStatistic,
-    UserProfile, Booking, Payment
+    UserProfile, Booking, Payment, GovernmentDispatchLog
 )
 from .serializers import (
     DestinationSerializer, SafetyZoneSerializer, AttractionSerializer,
@@ -33,6 +33,7 @@ from .ai_service import (
     generate_travel_story, generate_smart_itinerary,
     ai_travel_assistant_reply, calculate_safe_routes
 )
+from .gov_integration import GovernmentEmergencyGateway
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -192,15 +193,64 @@ def trip_planner_view(request):
 
 
 def memory_maker_view(request):
-    destinations = Destination.objects.all()
-    rajahmundry = Destination.objects.filter(name__icontains="Rajahmundry").first()
-    attractions = rajahmundry.attractions.all() if rajahmundry else Attraction.objects.all()
-    memories = TravelMemory.objects.all().order_by('-created_at')
-    
+    """Tourist Memory Maker — allows travelers to input their visited places,
+    delicacies, and photos, synthesize an AI travel story, and save to their profile."""
+    destinations = Destination.objects.all().order_by('name')
+    attractions = Attraction.objects.all()
+    user = request.user if request.user.is_authenticated else None
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip() or '🌅 My Journey in India'
+        destination = request.POST.get('destination', '').strip() or 'Rajahmundry'
+        traveler_name = request.POST.get('traveler_name', '').strip() or (user.get_full_name() or user.username if user else 'Solo Explorer')
+        traveler_type = request.POST.get('traveler_type', 'Solo Traveler')
+        favorite_moment = request.POST.get('favorite_moment', '').strip()
+        generated_story = request.POST.get('generated_story', '').strip()
+
+        # Visited places
+        places = request.POST.getlist('visited_places')
+        if not places and request.POST.get('visited_places_csv'):
+            places = [p.strip() for p in request.POST.get('visited_places_csv').split(',') if p.strip()]
+
+        # Food tried
+        foods = request.POST.getlist('food_tried')
+        if not foods and request.POST.get('food_tried_csv'):
+            foods = [f.strip() for f in request.POST.get('food_tried_csv').split(',') if f.strip()]
+
+        travel_date_raw = request.POST.get('travel_date')
+        travel_date = None
+        if travel_date_raw:
+            try:
+                travel_date = timezone.datetime.strptime(travel_date_raw, '%Y-%m-%d').date()
+            except ValueError:
+                travel_date = None
+
+        if not generated_story:
+            generated_story = generate_travel_story(title, destination, traveler_name, places, foods, [], favorite_moment)
+
+        memory = TravelMemory.objects.create(
+            user=user,
+            title=title,
+            destination=destination,
+            traveler_name=traveler_name,
+            traveler_type=traveler_type,
+            travel_date=travel_date,
+            places_visited=places,
+            food_tried=foods,
+            favorite_moment=favorite_moment,
+            generated_story=generated_story,
+        )
+        messages.success(request, f'🎉 Travel Story "{memory.title}" has been saved to your profile!')
+        return redirect('profile')
+
+    user_memories = TravelMemory.objects.filter(user=user).order_by('-created_at') if user else TravelMemory.objects.none()
+    public_memories = TravelMemory.objects.all().order_by('-created_at')[:6]
+
     return render(request, 'memory_maker.html', {
         'destinations': destinations,
         'attractions': attractions,
-        'memories': memories,
+        'user_memories': user_memories,
+        'public_memories': public_memories,
         'active_tab': 'memories'
     })
 
@@ -211,6 +261,18 @@ def memory_detail_view(request, memory_id):
         'memory': memory,
         'active_tab': 'memories'
     })
+
+
+@require_http_methods(["POST"])
+def delete_memory_view(request, memory_id):
+    if not request.user.is_authenticated:
+        messages.error(request, 'Please login to manage your memories.')
+        return redirect('login')
+    memory = get_object_or_404(TravelMemory, id=memory_id, user=request.user)
+    title = memory.title
+    memory.delete()
+    messages.success(request, f'Memory "{title}" has been removed.')
+    return redirect('profile')
 
 
 def live_tracker_view(request, token):
@@ -230,12 +292,16 @@ def profile_view(request):
     user = request.user
     profile = getattr(user, 'profile', None)
 
-    memories = TravelMemory.objects.all().order_by('-created_at')
+    # Filter memories specifically for this logged-in user
+    user_memories = TravelMemory.objects.filter(user=user).order_by('-created_at')
+    # If user has no personal memories yet, show general memories as sample inspiration
+    memories = user_memories if user_memories.exists() else TravelMemory.objects.all().order_by('-created_at')[:3]
+
     trip_plans = TripPlan.objects.all().order_by('-created_at')
     verified_hotels = VerifiedHotel.objects.filter(verified=True)[:3]
     user_reviews = PostTripReview.objects.filter(moderated=True, is_published=True).order_by('-created_at')[:5]
     user_feedback = CustomerFeedback.objects.order_by('-created_at')[:5]
-    bookings = Booking.objects.filter(user=user).order_by('-created_at')[:5]
+    bookings = Booking.objects.filter(user=user).order_by('-created_at')
 
     # Build user initials for avatar
     display_name = user.get_full_name() or user.username
@@ -247,6 +313,7 @@ def profile_view(request):
         'display_name': display_name,
         'initials': initials,
         'memories': memories,
+        'user_memories_count': user_memories.count(),
         'trip_plans': trip_plans,
         'verified_hotels': verified_hotels,
         'user_reviews': user_reviews,
@@ -372,7 +439,7 @@ def register_view(request):
 
 @require_http_methods(["GET", "POST"])
 def booking_view(request, package_slug):
-    """Gather traveler count and create a booking, then send to payment."""
+    """Gather traveler manifest and trip specifics, create a booking, then send to payment."""
     package = get_object_or_404(TourismPackage, slug=package_slug, is_available=True)
 
     if not request.user.is_authenticated:
@@ -388,12 +455,54 @@ def booking_view(request, package_slug):
 
         unit_price = package.price
         total = unit_price * num_travelers
+
+        # Collect detailed traveler manifest
+        travelers_data = []
+        for i in range(num_travelers):
+            default_name = request.user.get_full_name() or request.user.username if i == 0 else f"Traveler {i+1}"
+            name = request.POST.get(f'traveler_name_{i}', '').strip() or default_name
+            age = request.POST.get(f'traveler_age_{i}', '').strip() or '28'
+            gender = request.POST.get(f'traveler_gender_{i}', 'Female')
+            id_type = request.POST.get(f'traveler_id_type_{i}', 'Aadhaar Card')
+            id_number = request.POST.get(f'traveler_id_number_{i}', '').strip() or 'N/A'
+            diet = request.POST.get(f'traveler_diet_{i}', 'Vegetarian')
+            phone = request.POST.get(f'traveler_phone_{i}', '').strip()
+
+            travelers_data.append({
+                'seat_number': i + 1,
+                'name': name,
+                'age': age,
+                'gender': gender,
+                'id_type': id_type,
+                'id_number': id_number,
+                'diet': diet,
+                'phone': phone,
+            })
+
+        # Planned travel date
+        travel_date_raw = request.POST.get('travel_date')
+        travel_date = None
+        if travel_date_raw:
+            try:
+                travel_date = timezone.datetime.strptime(travel_date_raw, '%Y-%m-%d').date()
+            except ValueError:
+                travel_date = None
+
+        contact_email = request.POST.get('contact_email', '').strip() or request.user.email
+        contact_phone = request.POST.get('contact_phone', '').strip()
+        special_requests = request.POST.get('special_requests', '').strip()
+
         booking = Booking.objects.create(
             user=request.user,
             package=package,
             num_travelers=num_travelers,
             unit_price=unit_price,
             total_amount=total,
+            travelers_data=travelers_data,
+            contact_email=contact_email,
+            contact_phone=contact_phone,
+            travel_date=travel_date,
+            special_requests=special_requests,
         )
         return redirect('payment', booking_ref=booking.booking_ref)
 
@@ -472,6 +581,274 @@ def booking_history_view(request):
         'bookings': bookings,
         'active_tab': 'profile',
     })
+
+
+def export_ticket_pdf_view(request, booking_ref):
+    """
+    Generates a styled, print-ready e-Ticket PDF for a confirmed booking
+    using ReportLab (mirrors the memory-album export helper).
+    """
+    booking = get_object_or_404(Booking, booking_ref=booking_ref, user=request.user)
+    package = booking.package
+    destination = package.destination
+    payment = booking.payments.filter(status='Success').order_by('-paid_at').first()
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=48, leftMargin=48,
+        topMargin=48, bottomMargin=48,
+    )
+
+    styles = getSampleStyleSheet()
+    brand_style = ParagraphStyle(
+        'BrandHeader',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=22,
+        leading=26,
+        textColor=colors.HexColor('#0f766e'),
+    )
+    brand_tagline_style = ParagraphStyle(
+        'BrandTagline',
+        parent=styles['Normal'],
+        fontName='Helvetica-Oblique',
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor('#64748b'),
+    )
+    ticket_style = ParagraphStyle(
+        'TicketLabel',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=13,
+        textColor=colors.HexColor('#334155'),
+    )
+    meta_label_style = ParagraphStyle(
+        'MetaLabel',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=7.5,
+        leading=10,
+        textColor=colors.HexColor('#94a3b8'),
+        uppercase=True,
+    )
+    meta_value_style = ParagraphStyle(
+        'MetaValue',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=13,
+        textColor=colors.HexColor('#0f172a'),
+    )
+    ref_style = ParagraphStyle(
+        'RefStyle',
+        parent=styles['Normal'],
+        fontName='Courier-Bold',
+        fontSize=16,
+        leading=20,
+        textColor=colors.HexColor('#0d9488'),
+        alignment=1,
+    )
+
+    story_elements = []
+
+    # Header row: brand + e-ticket label
+    header_data = [
+        [
+            Paragraph("🧭 YATRALENS", brand_style),
+            Paragraph("<b>E-TICKET</b><br/><font size=8 color='#64748b'>Travel Confirmation PDF</font>",
+                      ParagraphStyle('TicketFlag', parent=styles['Normal'], alignment=2)),
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[262, 262])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story_elements.append(header_table)
+    story_elements.append(Paragraph("Discover India. Plan Safely. Remember Forever.", brand_tagline_style))
+    story_elements.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor('#0d9488'), spaceBefore=8, spaceAfter=16))
+
+    # Booking reference + barcode strip
+    story_elements.append(Paragraph(f"BOOKING REFERENCE: {booking.booking_ref.upper()}", ticket_style))
+    story_elements.append(Spacer(1, 4))
+    story_elements.append(Paragraph(booking.booking_ref.upper(), ref_style))
+
+    # Faux barcode strip generated deterministically from the reference
+    seed = sum(ord(c) for c in booking.booking_ref)
+    pattern = [(seed >> i) & 1 for i in range(48)]
+    bar_row = [''] * len(pattern)
+    bar_table = Table([bar_row], colWidths=[6] * len(pattern), rowHeights=[28])
+    bar_style = [('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                 ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                 ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                 ('TOPPADDING', (0, 0), (-1, -1), 0),
+                 ('BOTTOMPADDING', (0, 0), (-1, -1), 0)]
+    for i, is_bar in enumerate(pattern):
+        bar_style.append(('BACKGROUND', (i, 0), (i, 0), colors.black if is_bar else colors.white))
+    bar_table.setStyle(TableStyle(bar_style))
+    story_elements.append(bar_table)
+    story_elements.append(Spacer(1, 18))
+
+    # Ticket summary table
+    traveler_name = booking.user.get_full_name() or booking.user.username
+    status_text = "CONFIRMED ✓" if booking.status == 'Paid' else booking.get_status_display().upper()
+    method_text = payment.get_method_display() if payment else '—'
+    tx_ref = payment.transaction_id[:14].upper() if payment else '—'
+    booked_on = booking.created_at.strftime('%d %b %Y') if booking.created_at else '—'
+    travel_date_str = booking.travel_date.strftime('%d %b %Y') if booking.travel_date else 'Flexible / To Be Confirmed'
+    contact_email_str = booking.contact_email or booking.user.email or '—'
+    contact_phone_str = booking.contact_phone or '—'
+
+    body_data = [
+        [
+            [Paragraph("PRIMARY TRAVELER", meta_label_style), Paragraph(traveler_name, meta_value_style)],
+            [Paragraph("PACKAGE", meta_label_style), Paragraph(package.title, meta_value_style)],
+        ],
+        [
+            [Paragraph("DESTINATION", meta_label_style), Paragraph(f"{destination.name}, {destination.state}", meta_value_style)],
+            [Paragraph("TRIP LENGTH", meta_label_style), Paragraph(f"{package.duration_days} Day{'s' if package.duration_days != 1 else ''}", meta_value_style)],
+        ],
+        [
+            [Paragraph("TRAVEL DATE", meta_label_style), Paragraph(travel_date_str, ParagraphStyle('TravelDateVal', parent=meta_value_style, fontName='Helvetica-Bold', textColor=colors.HexColor('#0f766e')))],
+            [Paragraph("TOTAL TRAVELERS", meta_label_style), Paragraph(f"{booking.num_travelers} Person{'s' if booking.num_travelers != 1 else ''}", meta_value_style)],
+        ],
+        [
+            [Paragraph("UNIT PRICE", meta_label_style), Paragraph(f"₹{booking.unit_price:,.0f} / traveler", meta_value_style)],
+            [Paragraph("TOTAL AMOUNT PAID", meta_label_style), Paragraph(f"₹{booking.total_amount:,.0f}", ParagraphStyle('TotalVal', parent=meta_value_style, fontName='Helvetica-Bold', fontSize=12, textColor=colors.HexColor('#0d9488')))],
+        ],
+        [
+            [Paragraph("CONTACT EMAIL", meta_label_style), Paragraph(contact_email_str, meta_value_style)],
+            [Paragraph("CONTACT PHONE", meta_label_style), Paragraph(contact_phone_str, meta_value_style)],
+        ],
+        [
+            [Paragraph("PAYMENT STATUS", meta_label_style), Paragraph(status_text, ParagraphStyle('StatusVal', parent=meta_value_style, fontName='Helvetica-Bold', textColor=colors.HexColor('#059669')))],
+            [Paragraph("PAYMENT METHOD & TXN", meta_label_style), Paragraph(f"{method_text} ({tx_ref})", meta_value_style)],
+        ],
+    ]
+
+    if booking.special_requests:
+        body_data.append([
+            [Paragraph("SPECIAL REQUESTS / NOTES", meta_label_style), Paragraph(booking.special_requests, meta_value_style)],
+            [Paragraph("BOOKED ON", meta_label_style), Paragraph(booked_on, meta_value_style)],
+        ])
+    else:
+        body_data.append([
+            [Paragraph("BOOKED ON", meta_label_style), Paragraph(booked_on, meta_value_style)],
+            [Paragraph("REFERENCE CODE", meta_label_style), Paragraph(booking.booking_ref.upper(), meta_value_style)],
+        ])
+
+    ticket_table = Table(body_data, colWidths=[262, 262])
+    ticket_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
+        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#cbd5e1')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('PADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story_elements.append(ticket_table)
+    story_elements.append(Spacer(1, 14))
+
+    # All Travelers Manifest Table
+    travelers_list = booking.travelers_data or []
+    if not travelers_list:
+        travelers_list = [{
+            'seat_number': 1,
+            'name': traveler_name,
+            'age': 'Adult',
+            'gender': '—',
+            'id_type': 'Govt ID',
+            'id_number': 'Verified',
+            'diet': 'Standard',
+            'phone': contact_phone_str,
+        }]
+
+    manifest_headers = [
+        Paragraph("<b>#</b>", meta_label_style),
+        Paragraph("<b>PASSENGER NAME</b>", meta_label_style),
+        Paragraph("<b>AGE / GENDER</b>", meta_label_style),
+        Paragraph("<b>GOVT ID PROOF</b>", meta_label_style),
+        Paragraph("<b>MEAL & CONTACT</b>", meta_label_style),
+    ]
+    manifest_rows = [manifest_headers]
+
+    for idx, t in enumerate(travelers_list):
+        p_num = str(t.get('seat_number', idx + 1))
+        p_name = t.get('name', f"Traveler {idx+1}")
+        p_age_gender = f"{t.get('age', '—')} yrs • {t.get('gender', '—')}"
+        p_id = f"<b>{t.get('id_type', 'Govt ID')}:</b><br/>{t.get('id_number', '—')}"
+        p_extra = f"Meal: {t.get('diet', 'Standard')}<br/>Phone: {t.get('phone', '—') or '—'}"
+
+        manifest_rows.append([
+            Paragraph(p_num, meta_value_style),
+            Paragraph(f"<b>{p_name}</b>", meta_value_style),
+            Paragraph(p_age_gender, meta_value_style),
+            Paragraph(p_id, meta_value_style),
+            Paragraph(p_extra, meta_value_style),
+        ])
+
+    manifest_table = Table(manifest_rows, colWidths=[24, 156, 96, 124, 124])
+    manifest_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e2e8f0')),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ffffff')),
+        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#cbd5e1')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('PADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    story_elements.append(Paragraph("<b>PASSENGER MANIFEST & TRAVELER DETAILS</b>", ticket_style))
+    story_elements.append(Spacer(1, 4))
+    story_elements.append(manifest_table)
+    story_elements.append(Spacer(1, 14))
+
+    # Perks / instructions box
+    perks_data = [
+        [
+            Paragraph(
+                "🛡️ <b>SafeTrip Verified Journey</b><br/><font size=8 color='#64748b'>All passengers must carry their original registered Government ID proof for hotel check-in and transit verification.</font>",
+                ticket_style),
+            Paragraph(
+                "🇮🇳 <b>24/7 Traveler Emergency Assistance</b><br/><font size=8 color='#64748b'>National Emergency: 112 | Women Safety: 1091 | Tourist Infoline: 1363</font>",
+                ticket_style),
+        ]
+    ]
+    perks_table = Table(perks_data, colWidths=[262, 262])
+    perks_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0fdfa')),
+        ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#5eead4')),
+        ('PADDING', (0, 0), (-1, -1), 8),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story_elements.append(perks_table)
+
+    # Footer
+    footer_data = [
+        [
+            Paragraph(
+                "This is a <b>demo/simulated ticket</b> — no real money was charged.<br/><font size=8 color='#94a3b8'>View this page at a portal kiosk or save as PDF for offline printing.</font>",
+                ParagraphStyle('FooterNote', parent=styles['Normal'], fontSize=8, leading=11, textColor=colors.HexColor('#94a3b8')))
+        ]
+    ]
+    footer_table = Table(footer_data, colWidths=[420])
+    footer_table.setStyle(TableStyle([
+        ('LINEABOVE', (0, 0), (-1, -1), 0.75, colors.HexColor('#cbd5e1')),
+        ('PADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story_elements.append(footer_table)
+
+    doc.build(story_elements)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type='application/pdf')
+    filename = f"YATRALENS_Ticket_{booking.booking_ref.upper()}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 # ==========================================
@@ -677,6 +1054,7 @@ def admin_dashboard_view(request):
     hotels = VerifiedHotel.objects.all()
     incidents = IncidentReport.objects.all().order_by('-created_at')
     alerts = SafetyAlert.objects.all().order_by('-created_at')
+    erss_logs = GovernmentDispatchLog.objects.all().order_by('-created_at')[:15]
     total_memories = TravelMemory.objects.count()
     
     # Calculate summary metrics
@@ -687,6 +1065,7 @@ def admin_dashboard_view(request):
         'hotels': hotels,
         'incidents': incidents,
         'alerts': alerts,
+        'erss_logs': erss_logs,
         'total_memories': total_memories,
         'avg_safety': round(avg_safety, 1),
         'active_tab': 'admin'
@@ -734,41 +1113,106 @@ def api_safe_route(request):
 
 @api_view(['POST'])
 def api_sos_trigger(request):
+    """
+    Triggers an official Emergency SOS Beacon conforming to MHA ERSS 112 CAD standards.
+    Creates an IncidentReport, logs a GovernmentDispatchLog, resolves jurisdiction,
+    and returns 1-click WhatsApp and SMS intent links with live GPS.
+    """
     data = request.data or {}
-    traveler_name = data.get('traveler_name', 'Solo Traveler')
+    
+    # Extract traveler telemetry & identity
+    traveler_name = data.get('traveler_name')
+    traveler_phone = data.get('phone', '')
+    emergency_contact = data.get('emergency_contact', '')
+    
+    if request.user.is_authenticated:
+        profile = getattr(request.user, 'profile', None)
+        if not traveler_name:
+            traveler_name = request.user.get_full_name() or request.user.username
+        if profile:
+            traveler_phone = traveler_phone or profile.phone
+            emergency_contact = emergency_contact or (f"{profile.emergency_contact_name} ({profile.emergency_contact_phone})" if profile.emergency_contact_name else "")
+    
+    traveler_name = traveler_name or 'Priya Sharma (Solo Traveler)'
     lat = float(data.get('latitude', 16.9891))
     lng = float(data.get('longitude', 81.7840))
     location_name = data.get('location_name', 'Godavari Pushkar Ghat, Rajahmundry')
+    battery_level = int(data.get('battery_level', 85))
+    is_offline_sync = bool(data.get('is_offline_sync', False))
     
-    # Create or update emergency incident
+    # 1. Generate Government ERSS 112 CAD Dispatch
+    cad_payload = GovernmentEmergencyGateway.create_erss_cad_dispatch(
+        traveler_name=traveler_name,
+        lat=lat,
+        lng=lng,
+        location_name=location_name,
+        incident_type="Emergency SOS (P1 Critical)",
+        traveler_phone=traveler_phone,
+        emergency_contact=emergency_contact,
+        battery_level=battery_level,
+        is_offline_sync=is_offline_sync
+    )
+    
+    # 2. Create standard Incident Report
     incident = IncidentReport.objects.create(
         reporter_name=traveler_name,
         incident_type='Medical Emergency',
         location_name=location_name,
         latitude=lat,
         longitude=lng,
-        description=f"🚨 EMERGENCY SOS ACTIVATED by {traveler_name} at {location_name}. Automated emergency alert dispatched to trusted contacts and nearest police control room.",
+        description=f"🚨 EMERGENCY SOS ACTIVATED by {traveler_name} at {location_name}. CAD Ref: {cad_payload['cad_reference_id']}. Auto-forwarded to {cad_payload['assigned_jurisdiction']['police_station']}.",
         status='Under Review'
     )
     
-    # Retrieve nearest police and hospitals
+    # 3. Save Government Dispatch Log for ERSS 112 CAD monitoring
+    dispatch_log = GovernmentDispatchLog.objects.create(
+        cad_reference_id=cad_payload['cad_reference_id'],
+        incident=incident,
+        traveler_name=traveler_name,
+        traveler_phone=traveler_phone,
+        emergency_contact=emergency_contact,
+        latitude=lat,
+        longitude=lng,
+        location_name=location_name,
+        jurisdiction_police_station=cad_payload['assigned_jurisdiction']['police_station'],
+        pcr_callsign=cad_payload['assigned_jurisdiction']['pcr_van_callsign'],
+        dispatch_status='DISPATCHED_TO_PCR',
+        cad_payload=cad_payload,
+        is_offline_sync=is_offline_sync
+    )
+    
+    # 4. Generate 1-Click WhatsApp & SMS emergency intents
+    whatsapp_url = GovernmentEmergencyGateway.generate_whatsapp_sos_url(
+        traveler_name=traveler_name,
+        lat=lat,
+        lng=lng,
+        location_name=location_name,
+        trusted_phone=emergency_contact
+    )
+    sms_url = GovernmentEmergencyGateway.generate_sms_intent_url(
+        traveler_name=traveler_name,
+        lat=lat,
+        lng=lng,
+        location_name=location_name,
+        trusted_phone=emergency_contact
+    )
+    
+    # 5. Retrieve nearest emergency services
     police_stations = EmergencyService.objects.filter(service_type='Police')[:3]
     hospitals = EmergencyService.objects.filter(service_type='Hospital')[:3]
-    
     police_data = EmergencyServiceSerializer(police_stations, many=True).data
     hospital_data = EmergencyServiceSerializer(hospitals, many=True).data
     
     return Response({
-        'status': 'SOS_DISPATCHED',
+        'status': 'SOS_DISPATCHED_ERSS_112',
         'alert_id': incident.id,
-        'message': f"Emergency alert broadcasted. Coordinates: ({lat}, {lng}). SMS sent to trusted contacts.",
-        'helplines': {
-            'national_emergency': '112',
-            'women_helpline': '1091',
-            'women_distress': '1090',
-            'tourist_helpline': '1363',
-            'police_control_room': '0883-2471033'
-        },
+        'cad_reference_id': cad_payload['cad_reference_id'],
+        'dispatch_log_id': dispatch_log.id,
+        'message': f"Emergency CAD alert {cad_payload['cad_reference_id']} dispatched to {cad_payload['assigned_jurisdiction']['police_station']}.",
+        'cad_dispatch': cad_payload,
+        'whatsapp_sos_url': whatsapp_url,
+        'sms_sos_url': sms_url,
+        'helplines': GovernmentEmergencyGateway.NATIONAL_HELPLINES,
         'nearest_police': police_data,
         'nearest_hospitals': hospital_data
     })
@@ -869,11 +1313,25 @@ def api_generate_story(request):
 @api_view(['POST'])
 def api_save_memory(request):
     data = request.data or {}
+    user = request.user if request.user.is_authenticated else None
+
+    travel_date_raw = data.get('travel_date')
+    travel_date = None
+    if travel_date_raw:
+        try:
+            travel_date = timezone.datetime.strptime(travel_date_raw, '%Y-%m-%d').date()
+        except ValueError:
+            travel_date = None
+
+    default_name = (user.get_full_name() or user.username) if user else 'Solo Explorer'
+
     memory = TravelMemory.objects.create(
-        title=data.get('title', '🌅 My Day in Rajahmundry'),
+        user=user,
+        title=data.get('title', '🌅 My Journey in India'),
         destination=data.get('destination', 'Rajahmundry'),
-        traveler_name=data.get('traveler_name', 'Priya Sharma'),
-        traveler_type=data.get('traveler_type', 'Solo Woman Traveler'),
+        traveler_name=data.get('traveler_name', default_name),
+        traveler_type=data.get('traveler_type', 'Solo Traveler'),
+        travel_date=travel_date,
         places_visited=data.get('places_visited', []),
         food_tried=data.get('food_tried', []),
         historical_facts=data.get('historical_facts', []),
@@ -881,7 +1339,7 @@ def api_save_memory(request):
         photos=data.get('photos', []),
         generated_story=data.get('generated_story', '')
     )
-    return Response(TravelMemorySerializer(memory).data)
+    return Response(TravelMemorySerializer(memory).data, status=status.HTTP_201_CREATED)
 
 
 def export_memory_pdf_view(request, memory_id):
@@ -1270,3 +1728,157 @@ def api_reviews_stats(request):
                 'safety_score': dest.safety_score,
             })
     return Response(stats)
+
+
+# ==========================================
+# GOVERNMENT ERSS 112 & OFFLINE PWA ENDPOINTS
+# ==========================================
+
+def offline_hub_view(request):
+    """Render the cached Offline Emergency Hub & Field Guide."""
+    destinations = Destination.objects.all()
+    services = EmergencyService.objects.all()[:20]
+    return render(request, 'offline.html', {
+        'destinations': destinations,
+        'services': services,
+        'active_tab': 'offline'
+    })
+
+
+def manifest_view(request):
+    """Serve PWA Web App Manifest with correct MIME type."""
+    from django.conf import settings
+    import os
+    manifest_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'manifest.json')
+    try:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return HttpResponse(content, content_type='application/manifest+json')
+    except Exception:
+        return JsonResponse({'name': 'YATRALENS', 'short_name': 'YATRALENS'}, safe=False)
+
+
+def service_worker_view(request):
+    """Serve PWA Service Worker at root scope with correct MIME type."""
+    from django.conf import settings
+    import os
+    sw_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'sw.js')
+    try:
+        with open(sw_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return HttpResponse(content, content_type='application/javascript')
+    except Exception:
+        return HttpResponse('// SW not found', content_type='application/javascript')
+
+
+@api_view(['GET', 'POST'])
+def api_erss_cad_status(request, cad_id):
+    """Check or update the Computer-Aided Dispatch status of an ERSS 112 incident."""
+    log = get_object_or_404(GovernmentDispatchLog, cad_reference_id=cad_id)
+    if request.method == 'POST':
+        new_status = request.data.get('status')
+        if new_status in dict(GovernmentDispatchLog.STATUS_CHOICES):
+            log.dispatch_status = new_status
+            if log.incident:
+                if new_status == 'RESOLVED':
+                    log.incident.status = 'Resolved'
+                elif new_status in ['PCR_EN_ROUTE', 'ON_SCENE']:
+                    log.incident.status = 'Verified by Police'
+                log.incident.save()
+            log.save()
+            return Response({
+                'status': 'UPDATED',
+                'cad_reference_id': log.cad_reference_id,
+                'new_status': log.dispatch_status,
+                'status_label': log.get_dispatch_status_display()
+            })
+        return Response({'error': 'Invalid status choice'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({
+        'cad_reference_id': log.cad_reference_id,
+        'dispatch_status': log.dispatch_status,
+        'status_label': log.get_dispatch_status_display(),
+        'traveler_name': log.traveler_name,
+        'location_name': log.location_name,
+        'latitude': log.latitude,
+        'longitude': log.longitude,
+        'jurisdiction_police_station': log.jurisdiction_police_station,
+        'pcr_callsign': log.pcr_callsign,
+        'is_offline_sync': log.is_offline_sync,
+        'created_at': log.created_at.isoformat(),
+        'cad_payload': log.cad_payload
+    })
+
+
+@api_view(['POST'])
+def api_offline_sync_sos(request):
+    """
+    Ingest emergency SOS beacons queued on traveler devices while offline in low-connectivity areas.
+    """
+    data = request.data or {}
+    traveler_name = data.get('traveler_name', 'Offline Traveler')
+    lat = float(data.get('latitude', 16.9891))
+    lng = float(data.get('longitude', 81.7840))
+    offline_alert_id = data.get('id', str(uuid.uuid4()))
+    
+    # Generate ERSS 112 CAD dispatch with offline sync flag
+    cad_payload = GovernmentEmergencyGateway.create_erss_cad_dispatch(
+        traveler_name=traveler_name,
+        lat=lat,
+        lng=lng,
+        location_name=f"Delayed Offline GPS Sync ({lat}, {lng})",
+        incident_type="Offline Queued SOS (Delayed Transmit)",
+        battery_level=int(data.get('battery_level', 80)),
+        is_offline_sync=True
+    )
+    
+    incident = IncidentReport.objects.create(
+        reporter_name=traveler_name,
+        incident_type='Medical Emergency',
+        location_name=f"Offline Beacon {offline_alert_id} ({lat}, {lng})",
+        latitude=lat,
+        longitude=lng,
+        description=f"🚨 OFFLINE DELAYED SOS SYNCED: Beacon {offline_alert_id} queued at {data.get('timestamp')} was transmitted upon internet reconnection. ERSS CAD ID: {cad_payload['cad_reference_id']}.",
+        status='Under Review'
+    )
+    
+    dispatch_log = GovernmentDispatchLog.objects.create(
+        cad_reference_id=cad_payload['cad_reference_id'],
+        incident=incident,
+        traveler_name=traveler_name,
+        latitude=lat,
+        longitude=lng,
+        location_name=incident.location_name,
+        jurisdiction_police_station=cad_payload['assigned_jurisdiction']['police_station'],
+        pcr_callsign=cad_payload['assigned_jurisdiction']['pcr_van_callsign'],
+        dispatch_status='DISPATCHED_TO_PCR',
+        cad_payload=cad_payload,
+        is_offline_sync=True
+    )
+    
+    return Response({
+        'status': 'OFFLINE_SOS_SYNCED',
+        'offline_alert_id': offline_alert_id,
+        'cad_reference_id': cad_payload['cad_reference_id'],
+        'jurisdiction': cad_payload['assigned_jurisdiction']
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+def api_emergency_offline_bundle(request):
+    """
+    Returns a unified lightweight JSON bundle containing all destinations,
+    emergency services, and helpline directories for offline caching by Service Workers.
+    """
+    services = EmergencyService.objects.all()
+    destinations = Destination.objects.all()
+    
+    bundle = {
+        'version': '2026.1',
+        'generated_at': timezone.now().isoformat(),
+        'national_helplines': GovernmentEmergencyGateway.NATIONAL_HELPLINES,
+        'jurisdictions': GovernmentEmergencyGateway.POLICE_JURISDICTIONS,
+        'services': EmergencyServiceSerializer(services, many=True).data,
+        'destinations': DestinationSerializer(destinations, many=True).data
+    }
+    return Response(bundle)

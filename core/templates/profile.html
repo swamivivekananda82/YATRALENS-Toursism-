@@ -3,12 +3,12 @@
 {% block title %}My Profile – YATRALENS{% endblock %}
 
 {% block content %}
-<!-- Profile Header -->
-<div class="relative bg-gradient-to-r from-brand-800 via-brand-700 to-teal-600 text-white">
+<section class="relative bg-gradient-to-r from-brand-800 via-brand-700 to-teal-600 text-white overflow-hidden">
     <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px); background-size: 24px 24px;"></div>
+    <div class="absolute inset-0" style="background: radial-gradient(ellipse at 80% 20%, rgba(45,212,191,0.3), transparent 50%);"></div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="flex flex-col sm:flex-row sm:items-center gap-6">
-            <div class="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur border border-white/30 flex items-center justify-center text-3xl font-black shadow-xl">
+            <div class="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur border border-white/30 flex items-center justify-center text-3xl font-black shadow-xl hover:scale-105 transition-transform duration-300">
                 {{ initials }}
             </div>
             <div class="flex-1">
@@ -28,7 +28,7 @@
             <div class="flex items-center gap-2">
                 <a href="{% url 'memory_maker' %}" class="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md">
                     <i class="fa-solid fa-camera-retro"></i>
-                    <span>New Travel Story</span>
+                    <span>+ New Travel Story</span>
                 </a>
             </div>
         </div>
@@ -36,12 +36,22 @@
 </div>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-    
+
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="rounded-2xl px-4 py-3 text-xs font-semibold {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <!-- Row: Emergency Contact + Travel Preferences -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         <!-- Trusted Contacts -->
-        <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4">
+        <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4 hover-lift reveal">
             <div class="flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase text-rose-600"><i class="fa-solid fa-shield-halved mr-1"></i>Rapid SOS List</span>
@@ -62,15 +72,15 @@
             </div>
             {% else %}
             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-500">
-                No emergency contact set yet. You added none during registration.
+                No emergency contact set yet. You can update your emergency contact anytime.
             </div>
             {% endif %}
         </div>
 
         <!-- Travel Safety Profile -->
-        <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4">
+        <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4 hover-lift reveal stagger-1">
             <div>
-                <span class="text-xs font-bold uppercase text-teal-600">Preferences & Safeguards</span>
+                <span class="text-xs font-bold uppercase text-teal-600">Preferences &amp; Safeguards</span>
                 <h3 class="text-lg font-black text-slate-900 mt-0.5">Travel Safety Profile</h3>
             </div>
 
@@ -95,27 +105,142 @@
         </div>
     </div>
 
+    <!-- Saved Travel Stories (Preserved Memories) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6 reveal">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+                <span class="text-xs font-bold uppercase text-amber-600"><i class="fa-solid fa-camera-retro mr-1"></i>My Preserved Journeys</span>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">My Travel Memories &amp; Storybooks</h3>
+            </div>
+            <a href="{% url 'memory_maker' %}" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl text-xs font-bold shadow-md hover:from-amber-700 hover:to-orange-700 transition flex items-center gap-1.5 w-fit">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create New Memory Story</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for m in memories %}
+            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200 hover:shadow-lg transition space-y-4 flex flex-col justify-between">
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black uppercase px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-200">
+                            <i class="fa-solid fa-location-dot mr-1"></i>{{ m.destination }}
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-semibold">{{ m.created_at|date:"d M Y" }}</span>
+                    </div>
+
+                    <h4 class="font-black text-slate-900 text-base serif-font leading-snug">{{ m.title }}</h4>
+
+                    {% if m.places_visited %}
+                    <div class="flex flex-wrap gap-1">
+                        {% for place in m.places_visited|slice:":3" %}
+                        <span class="text-[9px] px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md font-semibold">{{ place }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <p class="text-xs text-slate-600 line-clamp-3 italic bg-white p-3 rounded-xl border border-slate-100">
+                        "{{ m.favorite_moment }}"
+                    </p>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
+                    <a href="{% url 'memory_detail' m.id %}" class="text-xs font-bold text-teal-700 hover:underline">
+                        Read Story →
+                    </a>
+                    <div class="flex items-center gap-1.5">
+                        <a href="{% url 'export_memory_pdf' m.id %}" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                            <i class="fa-solid fa-file-pdf text-[10px]"></i> PDF
+                        </a>
+                        {% if m.user == profile_user %}
+                        <form method="post" action="{% url 'delete_memory' m.id %}" onsubmit="return confirm('Delete this travel story?');" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 transition" title="Delete memory">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-10 bg-slate-50 rounded-3xl border border-dashed border-slate-300 lg:col-span-3 space-y-3">
+                <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 text-sm">No Travel Stories Yet</h4>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Create and preserve your journeys, local foods tried, and memories with instant PDF albums.</p>
+                <a href="{% url 'memory_maker' %}" class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Create My First Story
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- My Bookings -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6 reveal stagger-1">
         <div class="flex items-center justify-between">
             <div>
                 <span class="text-xs font-bold uppercase text-brand-600"><i class="fa-solid fa-receipt mr-1"></i>Bookings</span>
-                <h3 class="text-xl font-black text-slate-900 mt-0.5">My Package Bookings</h3>
+                <h3 class="text-xl font-black text-slate-900 mt-0.5">My Package Bookings &amp; Tickets</h3>
             </div>
-            <a href="{% url 'booking_history' %}" class="text-xs font-bold text-teal-600 hover:text-teal-700">View all →</a>
+            <a href="{% url 'booking_history' %}" class="text-xs font-bold text-teal-600 hover:text-teal-700">View all bookings →</a>
         </div>
 
         {% if bookings %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% for b in bookings %}
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2">
+            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-black text-slate-900">{{ b.package.title|truncatechars:30 }}</span>
-                    <span class="text-[10px] px-2.5 py-1 rounded-full font-extrabold uppercase tracking-wider {% if b.status == 'Paid' %}bg-emerald-100 text-emerald-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ b.get_status_display }}</span>
+                    <span class="text-sm font-black text-slate-900">{{ b.package.title|truncatechars:35 }}</span>
+                    <span class="text-[10px] px-2.5 py-1 rounded-full font-extrabold uppercase tracking-wider {% if b.status == 'Paid' %}bg-emerald-100 text-emerald-800 border border-emerald-200{% else %}bg-amber-100 text-amber-800 border border-amber-200{% endif %}">
+                        {{ b.get_status_display }}
+                    </span>
                 </div>
-                <div class="flex items-center justify-between text-[11px] text-slate-500">
-                    <span>{{ b.package.destination.name }} • {{ b.num_travelers }} traveler{{ b.num_travelers|pluralize }}</span>
-                    <span class="font-black text-brand-700">₹{{ b.total_amount|floatformat:"0" }}</span>
+
+                <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-100">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Destination</span>
+                        <span class="font-bold text-slate-800">{{ b.package.destination.name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Party Size</span>
+                        <span class="font-bold text-brand-700">{{ b.num_travelers }} Traveler{{ b.num_travelers|pluralize }}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Travel Date</span>
+                        <span class="font-semibold text-slate-800">{{ b.travel_date|date:"d M Y"|default:"Flexible" }}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Amount</span>
+                        <span class="font-black text-emerald-700">₹{{ b.total_amount|floatformat:"0" }}</span>
+                    </div>
+                </div>
+
+                <!-- Traveler manifest preview -->
+                {% if b.travelers_data %}
+                <div class="text-[11px] text-slate-500">
+                    <span class="font-bold text-slate-700">Travelers:</span>
+                    {% for t in b.travelers_data %}
+                        <span class="inline-block bg-slate-200/70 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1 mb-1">{{ t.name }} ({{ t.age }})</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+                    <span class="text-[10px] text-slate-400 font-mono">Ref: {{ b.booking_ref|upper }}</span>
+                    <div class="flex items-center gap-2">
+                        {% if b.status == 'Paid' %}
+                            <a href="{% url 'ticket_pdf' b.booking_ref %}" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-file-pdf text-[10px]"></i> E-Ticket PDF
+                            </a>
+                        {% else %}
+                            <a href="{% url 'payment' b.booking_ref %}" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition">
+                                Pay Now
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -126,40 +251,6 @@
             <a href="{% url 'tourism_packages' %}" class="mt-2 inline-block text-xs font-bold text-brand-700 hover:underline">Explore packages →</a>
         </div>
         {% endif %}
-    </div>
-
-    <!-- Saved Travel Stories -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <span class="text-xs font-bold uppercase text-amber-600"><i class="fa-solid fa-camera-retro mr-1"></i>My Preserved Journeys</span>
-                <h3 class="text-xl font-black text-slate-900 mt-0.5">Digital Travel Stories</h3>
-            </div>
-            <a href="{% url 'memory_maker' %}" class="text-xs font-bold text-teal-600 hover:text-teal-700">Open Studio →</a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for m in memories %}
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:shadow-lg transition space-y-3 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">{{ m.destination }}</span>
-                        <span class="text-[10px] text-slate-400">{{ m.created_at|date:"d M Y" }}</span>
-                    </div>
-                    <h4 class="font-black text-slate-900 text-sm serif-font">{{ m.title }}</h4>
-                    <p class="text-xs text-slate-600 line-clamp-3 mt-2 italic">"{{ m.favorite_moment }}"</p>
-                </div>
-                <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
-                    <a href="{% url 'memory_detail' m.id %}" class="text-xs font-bold text-teal-700 hover:underline">Read Story</a>
-                    <a href="{% url 'export_memory_pdf' m.id %}" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
-                        <i class="fa-solid fa-file-pdf text-[10px]"></i> PDF
-                    </a>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-sm text-slate-500 lg:col-span-3">No travel stories yet. Create your first memory!</p>
-            {% endfor %}
-        </div>
     </div>
 
 </div>

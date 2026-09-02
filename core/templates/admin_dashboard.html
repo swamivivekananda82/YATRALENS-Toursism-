@@ -103,6 +103,87 @@
 
     </div>
 
+    <!-- Government ERSS 112 Computer-Aided Dispatch (CAD) Live Feed -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+                <span class="text-[10px] font-black uppercase tracking-wider text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                    <i class="fa-solid fa-satellite-dish mr-1 animate-pulse"></i> ERSS 112 CAD Emergency Feed
+                </span>
+                <h3 class="text-lg font-black text-slate-900 mt-1">Live Emergency Dispatch & Police Response Log</h3>
+                <p class="text-xs text-slate-500">Real-time CAD incidents auto-routed to nearest state police jurisdiction control rooms</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 self-start sm:self-auto">
+                <i class="fa-solid fa-tower-cell text-teal-600 mr-1"></i> MHA ERSS Protocol Active
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px]">
+                    <tr>
+                        <th class="p-3">CAD Reference ID</th>
+                        <th class="p-3">Traveler Telemetry</th>
+                        <th class="p-3">Live Coordinates</th>
+                        <th class="p-3">Jurisdiction Station</th>
+                        <th class="p-3">PCR Vehicle</th>
+                        <th class="p-3">Dispatch Status</th>
+                        <th class="p-3 text-right">Update Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for log in erss_logs %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-3 font-mono font-black text-red-900">
+                            {{ log.cad_reference_id }}
+                            {% if log.is_offline_sync %}
+                            <span class="block text-[9px] font-bold text-amber-600 mt-0.5">⚠️ Synced from Offline</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900">{{ log.traveler_name }}</div>
+                            <div class="text-[10px] text-slate-500 font-mono">{{ log.traveler_phone|default:"In-App SOS" }}</div>
+                        </td>
+                        <td class="p-3 font-mono text-[11px] text-teal-800">
+                            <div>📍 {{ log.location_name|truncatechars:30 }}</div>
+                            <div class="text-[10px] text-slate-400">({{ log.latitude }}, {{ log.longitude }})</div>
+                        </td>
+                        <td class="p-3 font-semibold text-slate-700">
+                            {{ log.jurisdiction_police_station }}
+                        </td>
+                        <td class="p-3 font-mono text-[11px] font-bold text-indigo-700">
+                            🚔 {{ log.pcr_callsign }}
+                        </td>
+                        <td class="p-3">
+                            <span id="cadStatusBadge-{{ log.cad_reference_id }}" class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase
+                                {% if log.dispatch_status == 'RESOLVED' %}bg-emerald-100 text-emerald-800
+                                {% elif log.dispatch_status == 'ON_SCENE' %}bg-blue-100 text-blue-800
+                                {% elif log.dispatch_status == 'PCR_EN_ROUTE' %}bg-amber-100 text-amber-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ log.get_dispatch_status_display }}
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            <select onchange="updateCadStatus('{{ log.cad_reference_id }}', this.value)" class="text-[11px] font-bold bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 focus:ring-1 focus:ring-teal-500">
+                                <option value="DISPATCHED_TO_PCR" {% if log.dispatch_status == 'DISPATCHED_TO_PCR' %}selected{% endif %}>Dispatched</option>
+                                <option value="PCR_EN_ROUTE" {% if log.dispatch_status == 'PCR_EN_ROUTE' %}selected{% endif %}>En Route</option>
+                                <option value="ON_SCENE" {% if log.dispatch_status == 'ON_SCENE' %}selected{% endif %}>On Scene</option>
+                                <option value="RESOLVED" {% if log.dispatch_status == 'RESOLVED' %}selected{% endif %}>Resolved & Safe</option>
+                            </select>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-slate-400 text-xs">
+                            No active ERSS 112 emergency dispatches at this moment. All monitored sectors green.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Hotel Verification Management & Active Broadcasts Table -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
@@ -329,6 +410,34 @@
             closeBroadcastModal();
             showToast('Live Safety Alert broadcasted successfully!', 'success');
             setTimeout(() => window.location.reload(), 1200);
+        });
+    }
+
+    function updateCadStatus(cadId, newStatus) {
+        fetch(`/api/erss/cad/${cadId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'UPDATED') {
+                const badge = document.getElementById(`cadStatusBadge-${cadId}`);
+                if (badge) {
+                    badge.innerText = data.status_label;
+                    if (newStatus === 'RESOLVED') badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800';
+                    else if (newStatus === 'ON_SCENE') badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-800';
+                    else if (newStatus === 'PCR_EN_ROUTE') badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800';
+                    else badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-800';
+                }
+                showToast(`CAD ${cadId} status updated to: ${data.status_label}`, 'success');
+            } else {
+                showToast('Failed to update CAD status', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Network error updating CAD status', 'error');
         });
     }
 </script>

@@ -1,0 +1,350 @@
+<!-- YATRALENS Cinematic Intro Animation Component -->
+<div id="yatralensIntroOverlay" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950 text-white overflow-hidden select-none transition-all duration-700 opacity-0 pointer-events-none" style="display: none;">
+    
+    <!-- Background Animated Grid & Radial Glow -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-teal-900/30 via-slate-950 to-slate-950 pointer-events-none"></div>
+    <div class="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#14b8a615_1px,transparent_1px),linear-gradient(to_bottom,#14b8a615_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+    
+    <!-- Floating Ambient Orbs -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" style="animation-delay: 1.5s;"></div>
+
+    <!-- Top Right Controls (Sound & Skip) -->
+    <div class="absolute top-6 right-6 z-20 flex items-center gap-3">
+        <button id="introSoundToggle" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white backdrop-blur transition flex items-center gap-1.5 cursor-pointer" title="Toggle Sound">
+            <i id="introSoundIcon" class="fa-solid fa-volume-xmark text-slate-400"></i>
+            <span id="introSoundLabel" class="text-[11px]">Muted</span>
+        </button>
+        <button id="introSkipBtn" class="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-bold text-slate-200 hover:text-white backdrop-blur transition flex items-center gap-1 cursor-pointer">
+            Skip <i class="fa-solid fa-forward-step text-[10px] ml-1"></i>
+        </button>
+    </div>
+
+    <!-- Camera Viewfinder Overlay Frame [ + ] -->
+    <div class="absolute inset-8 sm:inset-14 border border-white/5 pointer-events-none flex flex-col justify-between p-4">
+        <div class="flex justify-between text-[11px] font-mono text-brand-400/60 tracking-widest uppercase">
+            <span>[ REC • 4K HDR ]</span>
+            <span>SAFE_CORRIDOR_GPS // LIVE</span>
+        </div>
+        <!-- Corner Reticles -->
+        <div class="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-brand-400/70"></div>
+        <div class="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-brand-400/70"></div>
+        <div class="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-brand-400/70"></div>
+        <div class="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-brand-400/70"></div>
+        
+        <div class="flex justify-between text-[11px] font-mono text-slate-500 tracking-widest">
+            <span>F/2.8 • ISO 100 • 1/2000s</span>
+            <span>YATRALENS OS v2.6</span>
+        </div>
+    </div>
+
+    <!-- Central Cinematic Stage -->
+    <div class="relative z-10 max-w-2xl mx-auto px-6 text-center flex flex-col items-center">
+        
+        <!-- Animated Camera Shutter & Aperture Ring -->
+        <div class="relative w-36 h-36 sm:w-44 sm:h-44 mb-6 flex items-center justify-center">
+            
+            <!-- Outer Pulsing Radar Rings -->
+            <div class="absolute inset-0 rounded-full border border-brand-400/30 animate-ping opacity-30 pointer-events-none"></div>
+            <div class="absolute -inset-3 rounded-full border border-dashed border-emerald-400/40 animate-spin-slow pointer-events-none"></div>
+            <div class="absolute -inset-6 rounded-full border border-teal-500/20 pointer-events-none"></div>
+
+            <!-- SVG Camera Aperture Blades (Rotating & Opening) -->
+            <div id="apertureContainer" class="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-slate-900 border-2 border-brand-400/80 shadow-[0_0_40px_rgba(20,184,166,0.35)] flex items-center justify-center overflow-hidden transition-all duration-700">
+                <svg id="apertureSvg" class="w-full h-full text-brand-500 transition-transform duration-1000 ease-out transform rotate-0" viewBox="0 0 100 100" fill="currentColor">
+                    <!-- Aperture Blades -->
+                    <polygon points="50,15 85,25 60,60" class="opacity-80 fill-brand-600" />
+                    <polygon points="85,25 85,75 50,60" class="opacity-90 fill-brand-700" />
+                    <polygon points="85,75 50,85 40,50" class="opacity-80 fill-brand-800" />
+                    <polygon points="50,85 15,75 40,40" class="opacity-90 fill-brand-700" />
+                    <polygon points="15,75 15,25 50,40" class="opacity-80 fill-brand-600" />
+                    <polygon points="15,25 50,15 60,50" class="opacity-90 fill-brand-500" />
+                </svg>
+
+                <!-- Center Optical Lens Glass -->
+                <div class="absolute inset-5 rounded-full bg-gradient-to-tr from-slate-950 via-brand-950 to-teal-900 border border-brand-300/40 flex items-center justify-center shadow-inner">
+                    <!-- Central Shifting Icon (Pillars) -->
+                    <div id="introPillarIcon" class="text-3xl sm:text-4xl text-brand-300 transition-all duration-500 transform scale-100">
+                        <i class="fa-solid fa-compass-drafting animate-bounce"></i>
+                    </div>
+                </div>
+
+                <!-- Camera Flash Flare Trigger -->
+                <div id="cameraFlash" class="absolute inset-0 bg-white rounded-full opacity-0 pointer-events-none transition-opacity duration-200"></div>
+            </div>
+
+            <!-- Focus Target Brackets around Aperture -->
+            <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-brand-400"></div>
+            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-brand-400"></div>
+            <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-brand-400"></div>
+            <div class="absolute -right-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-brand-400"></div>
+        </div>
+
+        <!-- 3-Pillar Kinetic Status Pill -->
+        <div class="mb-4 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/5 border border-brand-500/30 backdrop-blur text-xs font-semibold text-brand-200 transition-all duration-300">
+            <span id="introPillarDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="introPillarText" class="tracking-wide">Calibrating Safety &amp; Travel Compass...</span>
+        </div>
+
+        <!-- Brand Typography Reveal -->
+        <h1 id="introBrandTitle" class="text-4xl sm:text-6xl font-black tracking-tight leading-none">
+            <span class="bg-gradient-to-r from-brand-300 via-emerald-300 to-amber-300 bg-clip-text text-transparent drop-shadow-sm">
+                YATRALENS
+            </span>
+        </h1>
+
+        <p class="mt-3 text-sm sm:text-lg font-medium text-slate-300 italic serif-font">
+            Discover India. <span class="text-brand-300 font-bold not-italic">Plan Safely.</span> Remember Forever.
+        </p>
+
+        <!-- 3 Feature Highlights Icons (Lit sequentially) -->
+        <div class="mt-6 grid grid-cols-3 gap-3 w-full max-w-md">
+            <div id="pillBadge1" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center transition-all duration-500">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-lg mb-1"></i>
+                <div class="text-[11px] font-bold text-slate-200">Plan Safely</div>
+                <div class="text-[9px] text-slate-400">Real-time Intel</div>
+            </div>
+            <div id="pillBadge2" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center transition-all duration-500">
+                <i class="fa-solid fa-suitcase-rolling text-brand-400 text-lg mb-1"></i>
+                <div class="text-[11px] font-bold text-slate-200">Curated Trips</div>
+                <div class="text-[9px] text-slate-400">Best Packages</div>
+            </div>
+            <div id="pillBadge3" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center transition-all duration-500">
+                <i class="fa-solid fa-camera-retro text-amber-400 text-lg mb-1"></i>
+                <div class="text-[11px] font-bold text-slate-200">Memory Maker</div>
+                <div class="text-[9px] text-slate-400">Digital Stories</div>
+            </div>
+        </div>
+
+        <!-- Interactive Enter Button & Countdown Progress -->
+        <div class="mt-8 w-full max-w-sm flex flex-col items-center gap-3">
+            <button id="introEnterBtn" class="w-full group px-6 py-3.5 bg-gradient-to-r from-brand-500 via-teal-500 to-emerald-500 hover:from-brand-600 hover:to-emerald-600 text-white font-bold text-sm rounded-2xl shadow-lg shadow-teal-500/25 transition transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer">
+                <span>Explore YATRALENS</span>
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+            </button>
+
+            <!-- Auto-Transition Progress Bar -->
+            <div class="w-full flex items-center gap-2 text-[11px] text-slate-400">
+                <span>Auto-entering</span>
+                <div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div id="introProgressFill" class="h-full bg-gradient-to-r from-brand-400 to-emerald-400 w-0 transition-all duration-100 ease-linear"></div>
+                </div>
+                <span id="introSecondsText" class="font-mono text-brand-300">4s</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    @keyframes spinSlow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+        animation: spinSlow 18s linear infinite;
+    }
+</style>
+
+<script>
+/**
+ * YATRALENS Cinematic Intro Controller
+ */
+(function() {
+    let audioCtx = null;
+    let isSoundEnabled = false;
+    let introTimer = null;
+    let progressInterval = null;
+    let animationStageTimer = null;
+
+    const overlay = document.getElementById('yatralensIntroOverlay');
+    const skipBtn = document.getElementById('introSkipBtn');
+    const enterBtn = document.getElementById('introEnterBtn');
+    const soundToggle = document.getElementById('introSoundToggle');
+    const soundIcon = document.getElementById('introSoundIcon');
+    const soundLabel = document.getElementById('introSoundLabel');
+    const progressFill = document.getElementById('introProgressFill');
+    const secondsText = document.getElementById('introSecondsText');
+    const pillarText = document.getElementById('introPillarText');
+    const pillarIcon = document.getElementById('introPillarIcon');
+    const apertureSvg = document.getElementById('apertureSvg');
+    const cameraFlash = document.getElementById('cameraFlash');
+    const badge1 = document.getElementById('pillBadge1');
+    const badge2 = document.getElementById('pillBadge2');
+    const badge3 = document.getElementById('pillBadge3');
+
+    // Synthesize subtle futuristic sci-fi sound fx (Web Audio API)
+    function playSynthTone(freq, type = 'sine', duration = 0.18, gainVal = 0.08) {
+        if (!isSoundEnabled) return;
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+            // Audio policy fallback
+        }
+    }
+
+    function toggleSound() {
+        isSoundEnabled = !isSoundEnabled;
+        if (isSoundEnabled) {
+            soundIcon.className = 'fa-solid fa-volume-high text-brand-400';
+            soundLabel.textContent = 'Audio On';
+            playSynthTone(587.33, 'triangle', 0.2, 0.1); // D5
+        } else {
+            soundIcon.className = 'fa-solid fa-volume-xmark text-slate-400';
+            soundLabel.textContent = 'Muted';
+        }
+    }
+
+    // Step-by-step kinetic animation sequence
+    function startKineticStages() {
+        // Stage 1: Focus & Safety (0.5s)
+        setTimeout(() => {
+            if (apertureSvg) apertureSvg.style.transform = 'rotate(45deg) scale(0.9)';
+            if (pillarText) pillarText.innerHTML = '🛡️ <span class="text-emerald-300">Plan Safely:</span> Real-Time Crime & Safety Radar Active';
+            if (pillarIcon) pillarIcon.innerHTML = '<i class="fa-solid fa-shield-halved text-emerald-400"></i>';
+            if (badge1) {
+                badge1.classList.add('bg-emerald-500/20', 'border-emerald-400/60', 'scale-105');
+            }
+            playSynthTone(440, 'sine', 0.25); // A4
+        }, 600);
+
+        // Stage 2: Curated Packages (1.6s)
+        setTimeout(() => {
+            if (apertureSvg) apertureSvg.style.transform = 'rotate(120deg) scale(1.05)';
+            if (pillarText) pillarText.innerHTML = '📦 <span class="text-brand-300">Explore Packages:</span> 6+ Curated India Itineraries';
+            if (pillarIcon) pillarIcon.innerHTML = '<i class="fa-solid fa-suitcase-rolling text-brand-300"></i>';
+            if (badge2) {
+                badge2.classList.add('bg-brand-500/20', 'border-brand-400/60', 'scale-105');
+            }
+            playSynthTone(554.37, 'sine', 0.25); // C#5
+        }, 1800);
+
+        // Stage 3: Camera Shutter Click & Flash (2.8s)
+        setTimeout(() => {
+            if (apertureSvg) apertureSvg.style.transform = 'rotate(180deg) scale(1)';
+            if (cameraFlash) {
+                cameraFlash.classList.add('opacity-90');
+                setTimeout(() => cameraFlash.classList.remove('opacity-90'), 180);
+            }
+            if (pillarText) pillarText.innerHTML = '📸 <span class="text-amber-300">Remember Forever:</span> AI Travel Storybooks Ready';
+            if (pillarIcon) pillarIcon.innerHTML = '<i class="fa-solid fa-camera-retro text-amber-300"></i>';
+            if (badge3) {
+                badge3.classList.add('bg-amber-500/20', 'border-amber-400/60', 'scale-105');
+            }
+            playSynthTone(880, 'triangle', 0.35, 0.12); // Shutter chime A5
+        }, 2900);
+    }
+
+    // Dismiss the intro overlay with a smooth cinematic fade/zoom dissolve
+    function closeIntro() {
+        if (!overlay) return;
+        
+        // Save to localStorage so first-time visitors don't get forced on every page change
+        try {
+            localStorage.setItem('yt_welcome_seen', '1');
+        } catch (e) {}
+
+        clearInterval(progressInterval);
+        clearTimeout(introTimer);
+
+        overlay.classList.add('opacity-0', 'scale-105');
+        overlay.classList.remove('opacity-100', 'scale-100');
+        
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            overlay.classList.add('pointer-events-none');
+            // Inform page that intro completed
+            document.dispatchEvent(new CustomEvent('yatralensIntroFinished'));
+        }, 700);
+    }
+
+    // Public method to trigger intro anytime on demand
+    window.playYatralensIntro = function(force = true) {
+        if (!overlay) return;
+        
+        overlay.style.display = 'flex';
+        // Force reflow
+        overlay.offsetHeight;
+        
+        overlay.classList.remove('pointer-events-none', 'opacity-0', 'scale-105');
+        overlay.classList.add('opacity-100', 'scale-100');
+
+        // Reset Badges
+        [badge1, badge2, badge3].forEach(b => {
+            if (b) b.classList.remove('bg-emerald-500/20', 'border-emerald-400/60', 'bg-brand-500/20', 'border-brand-400/60', 'bg-amber-500/20', 'border-amber-400/60', 'scale-105');
+        });
+
+        startKineticStages();
+
+        // 4.5 Second Total Duration Progress
+        const totalDuration = 4500;
+        const startTime = Date.now();
+        clearInterval(progressInterval);
+        
+        progressInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const pct = Math.min(100, (elapsed / totalDuration) * 100);
+            if (progressFill) progressFill.style.width = pct + '%';
+            const remainingSec = Math.max(0, Math.ceil((totalDuration - elapsed) / 1000));
+            if (secondsText) secondsText.textContent = remainingSec + 's';
+
+            if (elapsed >= totalDuration) {
+                clearInterval(progressInterval);
+                closeIntro();
+            }
+        }, 50);
+    };
+
+    // Attach listeners
+    if (skipBtn) skipBtn.addEventListener('click', closeIntro);
+    if (enterBtn) enterBtn.addEventListener('click', closeIntro);
+    if (soundToggle) soundToggle.addEventListener('click', toggleSound);
+
+    // Auto-trigger on first landing if not previously seen or if explicitly requested via ?intro=1
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceIntro = urlParams.get('intro') === '1' || urlParams.get('replay') === '1';
+        let seen = false;
+        try {
+            seen = localStorage.getItem('yt_welcome_seen') === '1';
+        } catch(e) {}
+
+        if (!seen || forceIntro) {
+            window.playYatralensIntro();
+        }
+    });
+
+    // Subtle mouse-parallax on the central aperture stage for depth
+    const stage = overlay ? overlay.querySelector('.relative.z-10') : null;
+    if (stage) {
+        overlay.addEventListener('pointermove', (e) => {
+            const rect = overlay.getBoundingClientRect();
+            const cx = (e.clientX - rect.left) / rect.width - 0.5;
+            const cy = (e.clientY - rect.top) / rect.height - 0.5;
+            stage.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            stage.style.transform = `translate(${cx * 16}px, ${cy * 12}px)`;
+        });
+        overlay.addEventListener('pointerleave', () => {
+            stage.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            stage.style.transform = 'translate(0, 0)';
+        });
+    }
+
+})();
+</script>

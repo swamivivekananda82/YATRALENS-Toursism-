@@ -239,10 +239,12 @@ class LiveShareSession(models.Model):
 
 
 class TravelMemory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='memories')
     title = models.CharField(max_length=200, default="🌅 My Unforgettable Day in Rajahmundry")
     destination = models.CharField(max_length=150, default="Rajahmundry")
     traveler_name = models.CharField(max_length=150, default="Aarohi Reddy")
     traveler_type = models.CharField(max_length=50, default="Solo Woman Traveler")
+    travel_date = models.DateField(null=True, blank=True)
     places_visited = models.JSONField(default=list, help_text="List of visited spots")
     food_tried = models.JSONField(default=list, help_text="List of foods tried")
     historical_facts = models.JSONField(default=list, help_text="Enriched historical trivia")
@@ -292,6 +294,39 @@ class IncidentReport(models.Model):
 
     def __str__(self):
         return f"[{self.incident_type}] {self.location_name} - {self.status}"
+
+
+class GovernmentDispatchLog(models.Model):
+    """Ministry of Home Affairs ERSS 112 Computer Aided Dispatch (CAD) Log."""
+    STATUS_CHOICES = [
+        ('QUEUED', '⏳ ERSS 112 Queued'),
+        ('DISPATCHED_TO_PCR', '🚔 PCR Unit Dispatched'),
+        ('PCR_EN_ROUTE', '🚨 PCR Unit En Route'),
+        ('ON_SCENE', '📍 First Responders On Scene'),
+        ('RESOLVED', '✅ Incident Resolved & Safe'),
+    ]
+
+    cad_reference_id = models.CharField(max_length=60, unique=True, db_index=True)
+    incident = models.ForeignKey(IncidentReport, on_delete=models.SET_NULL, null=True, blank=True, related_name='erss_dispatches')
+    traveler_name = models.CharField(max_length=150, default="Solo Traveler")
+    traveler_phone = models.CharField(max_length=50, blank=True)
+    emergency_contact = models.CharField(max_length=150, blank=True)
+    latitude = models.FloatField(default=16.9891)
+    longitude = models.FloatField(default=81.7840)
+    location_name = models.CharField(max_length=255, default="Godavari Riverfront")
+    jurisdiction_police_station = models.CharField(max_length=200, default="Rajahmundry I Town Police Station")
+    pcr_callsign = models.CharField(max_length=100, default="PCR-UNIT-1")
+    dispatch_status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='DISPATCHED_TO_PCR')
+    cad_payload = models.JSONField(default=dict, blank=True)
+    is_offline_sync = models.BooleanField(default=False, help_text="Was this alert synced after being offline?")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.cad_reference_id} — {self.traveler_name} ({self.get_dispatch_status_display()})"
 
 
 class TourismPackage(models.Model):
@@ -503,6 +538,14 @@ class Booking(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    
+    # Traveler manifest & trip specifics
+    travelers_data = models.JSONField(default=list, blank=True, help_text="List of traveler details [{name, age, gender, id_type, id_number, phone, emergency_contact, dietary_pref}]")
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=30, blank=True)
+    travel_date = models.DateField(null=True, blank=True)
+    special_requests = models.TextField(blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

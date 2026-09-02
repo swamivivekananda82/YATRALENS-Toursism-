@@ -22,7 +22,7 @@
     {% if bookings %}
         <div class="space-y-5">
             {% for b in bookings %}
-            <div class="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden hover-lift reveal stagger-{{ forloop.counter }}">
                 <div class="flex flex-col sm:flex-row">
                     <div class="sm:w-52 h-40 sm:h-auto relative shrink-0">
                         <img src="{{ b.package.image_url|default:b.package.destination.image_url }}" alt="{{ b.package.title }}" class="w-full h-full object-cover" />
@@ -56,11 +56,20 @@
                         </div>
                         <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                             <a href="{% url 'package_detail' b.package.slug %}" class="text-xs font-bold text-teal-700 hover:underline">View Package</a>
-                            {% if b.status == 'Pending' %}
-                                <a href="{% url 'payment' b.booking_ref %}" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition">
-                                    <i class="fa-solid fa-credit-card mr-1"></i> Complete Payment
-                                </a>
-                            {% endif %}
+                            <div class="flex items-center gap-2">
+                                {% if b.status == 'Paid' %}
+                                    <a href="{% url 'payment_success' b.booking_ref %}" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-lg transition">
+                                        <i class="fa-solid fa-ticket mr-1"></i> View Ticket
+                                    </a>
+                                    <a href="{% url 'ticket_pdf' b.booking_ref %}" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition">
+                                        <i class="fa-solid fa-file-pdf mr-1"></i> Download PDF
+                                    </a>
+                                {% elif b.status == 'Pending' %}
+                                    <a href="{% url 'payment' b.booking_ref %}" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition">
+                                        <i class="fa-solid fa-credit-card mr-1"></i> Complete Payment
+                                    </a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -68,8 +77,8 @@
             {% endfor %}
         </div>
     {% else %}
-        <div class="text-center py-16 bg-white rounded-3xl shadow-md border border-slate-200">
-            <div class="w-20 h-20 rounded-full bg-brand-50 flex items-center justify-center mx-auto">
+        <div class="text-center py-16 bg-white rounded-3xl shadow-md border border-slate-200 reveal-scale">
+            <div class="w-20 h-20 rounded-full bg-brand-50 flex items-center justify-center mx-auto animate-float">
                 <i class="fa-solid fa-suitcase-rolling text-3xl text-brand-500"></i>
             </div>
             <h3 class="mt-4 text-lg font-black text-slate-900">No bookings yet</h3>
